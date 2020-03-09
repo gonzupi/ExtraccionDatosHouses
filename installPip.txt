@@ -1,0 +1,5 @@
+scorecardpy 
+pandas
+selenium
+scipy
+pickle
