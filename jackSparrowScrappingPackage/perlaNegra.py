@@ -28,6 +28,9 @@ import time
 from pathlib import Path
 import sys
 import pathlib
+import urllib
+import requests
+import shutil
 
 #Variables globales
 ################################################################################################################
@@ -47,10 +50,14 @@ proxy = Proxy({
     'noProxy':''})
 
 debug = True #Esto hace que vayan mostrandose los mensajes por el terminal, cambiar a False si se quiere
-tiempoEspera = 4
+tiempoEspera = 5
 sleepTime = 2 # mas rand de 2 segundos
-nombreArchivo = "datos"
-url_Prueba_Busqueda = "https://www.idealista.com/areas/venta-viviendas/con-pisos,duplex,aticos/?shape=%28%28_ez%7DExsz%5Cu%40oGFmMjHdCOhNmFlB%29%29"
+home = str(Path.home())
+print("Ruta home : ", home)
+rutaGuardado = home + r"\Desktop"
+##RELLENAR AQUI el enlace y el nombre del fichero
+nombreArchivo = "Marbella_3"
+url_Prueba_Busqueda = "https://www.idealista.com/areas/venta-viviendas/con-pisos,duplex,aticos/?shape=%28%28_%7Dy%7DEdm%7C%5C%5Biw%40xCSJrn%40bAlEb%40ZqF%7E%40%29%29"
 ################################################################################################################
 
 #definicion de funciones
@@ -79,7 +86,7 @@ def extractLinks(urlSearch):
     print("Hay ",pages, " páginas")
     page = 0
     linkActual = 0;
-    df = pd.DataFrame(columns = ['Link', 'Título','Precio', 'metros cuadrados','Num habitaciones', 'Piso', 'Referencia del portal','Inmoviliaria', 'Nº fotos', 'Comentario'])
+    df = pd.DataFrame(columns = ['Link', 'Título','Precio', 'metros cuadrados','Num habitaciones', 'Piso', 'Referencia del portal','Inmoviliaria', 'Nº fotos','tipo de portada', 'Comentario'])
     while page < pages:
         print("Extrayendo : página ", page, " de ", pages)
         page = page+1
@@ -101,15 +108,17 @@ def extractLinks(urlSearch):
                 except:
                     print("ERROR : No encuentro los links...")
         links = []
+        links.clear()
         for i in houses:
             try:
                 links.append(i.get_attribute('href'))
             except:
                 print(prefix , 'EEROR : Link ERROR')
-        
+        print("Extraidos ", len(links), " links")
         
         for x in links:
             print("Extrayendo página ", linkActual, " de un total de ", NumObjects[0])
+            printElapsedTieme(start_time)
             linkActual = linkActual+1
             sleepRand()
             driver.get(x)
@@ -133,14 +142,28 @@ def extractLinks(urlSearch):
             v_seller = getSeller(wait)
             if(debug==True): print(v_seller)
             v_comment = getComment(wait)
+            photoName = getPhotography(wait,linkActual )
+            photoText = photoName.split(' ')
+            if(photoText[1] == "de"): photoText[1]=photoText[2]
+            print("Palabra clave de la imagen : ", photoText[1])
             #if(debug==True): print(v_comment)   
             #['Link', 'Título','Precio', 'metros cuadrados','Piso', 'Referencia del portal','Inmoviliaria', 'Nº fotos'])
-            df.loc[len(df)] = [x,v_titleHouse,v_priceHouse ,v_areaHouse,v_NumRooms, v_floor,v_reference,v_seller, v_numPhotos, v_comment]
+            df.loc[len(df)] = [x,v_titleHouse,v_priceHouse ,v_areaHouse,v_NumRooms, v_floor,v_reference,v_seller, v_numPhotos, photoText[1], v_comment]
         
         driver.get(urlSearch)
+        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
+        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
+        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
         sleepRand()
-        if page < pages-1: 
-            clickNextPage(wait)
+        print("Click en siguiente")
+        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
+        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
+        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
+        sleepRand()
+        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
+        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
+        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
+        clickNextPage(wait)
         urlSearch = driver.current_url
         
     driver.close()    
@@ -153,8 +176,8 @@ def extractLinks(urlSearch):
               keys=None, levels=None, names=None, verify_integrity=False,
               copy=True)
 
-    home = str(Path.home())
-    df_copy.to_csv(home + r"\Desktop\datos_"+nombreArchivo+'.csv', encoding='utf-8', index=False)
+    
+    df_copy.to_csv(rutaGuardado + "\datos_"+nombreArchivo+'.csv', encoding='utf-8', index=False)
     print(prefix,'Finalizado : Copia de datos al excel')
     print("Los datos están en ", home, "\Desktop\datos_", nombreArchivo, ".csv")
     printElapsedTieme(start_time)
@@ -226,6 +249,47 @@ def getNumRooms(wait):
             v_numberRooms = 'ERROR'
     return v_numberRooms
 
+def getPhotography(wait, numImage):
+    try:
+        img =  wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,"div.main-image_first img")))
+        #print("Imagen obtenida")
+    except :
+        try:
+            img =  wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,"div.main-image_first img")))
+            #print("Imagen obtenida")
+        except:
+            print('ERROR : Obteniendo la imagen')
+            img = 'ERROR'
+    try:
+        src = img.get_attribute('src')
+        print("Imagen src : ", src)
+        imageName = str(numImage) + "_" + nombreArchivo + r".jpg"
+        print("Nombre del archivo : ",imageName)
+        imageCompleteName = rutaGuardado+ "\img_" + imageName
+        print("Ruta del archivo :", imageCompleteName)
+        print("Nombre del archivo : ",imageName)
+        urllib.request.urlretrieve(src,imageCompleteName)
+        print("Imagen guardada")
+    except :
+        print("Error guardando la imagen ")
+    try:
+        name = img.get_attribute('title')
+        print("Nombre de la imagen web: ", name)
+    except OSError as err:
+        print("OS error: {0}".format(err))
+    except ImportError:
+        print("NO module found")
+    except ValueError:
+        print("Could not convert data to an integer.")
+    except:
+        print("ERROR con el nombre de la imagen")
+        name = 'ERROR ERROR'
+    return name
+
+def save_image_to_file(image, dirname, suffix):
+    with open('{dirname}/img_{suffix}.jpg'.format(dirname=dirname, suffix=suffix), 'wb') as out_file:
+        shutil.copyfileobj(image.raw, out_file)
+
 def getFloor(wait):
     try:
         v_floor = wait.until(EC.presence_of_element_located((By.XPATH,"//div[@class='info-features']/span[3]/span"))).text
@@ -255,7 +319,7 @@ def getNumberOfPhotos(wait):
         try:
             v_NumPhotos = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,".btn.fa-button.icon-no-pics.with-text > .fa-button-text"))).text
         except:
-            print('ERROR : Obteniendo la referencia')
+            print('ERROR : Obteniendo el numero de fotos')
             v_NumPhotos = 'ERROR'
     return v_NumPhotos
 
