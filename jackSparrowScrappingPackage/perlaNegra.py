@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 '''
 Created on 19 nov. 2019
-@author: Gonzalo Bueno Santana
+@author: Gonzupi
 Programa pensado para extraer datos de la plataforma YouTube usando diferentes navegadores : Google Chrome, Mozilla Firefox, Microsoft Edge y Opera
 El programa extrae información con sesión iniciada y sin la sesión iniciada para después compararla
 '''
@@ -30,8 +30,7 @@ import sys
 import pathlib
 import urllib
 import requests
-import shutil
-
+import urllib.request
 #Variables globales
 ################################################################################################################
 #Consigo algunos parámetros para mostrar el nombre del dispositivo, calcular el tiempo que tarda el programa en funcionar y demás.
@@ -54,7 +53,8 @@ tiempoEspera = 5
 sleepTime = 2 # mas rand de 2 segundos
 home = str(Path.home())
 print("Ruta home : ", home)
-rutaGuardado = home + r"\Desktop"
+rutaGuardado = r"C:\fotosExtraccion"
+#rutaGuardado = home + r"\Desktop\foto"
 ##RELLENAR AQUI el enlace y el nombre del fichero
 nombreArchivo = "Marbella_3"
 url_Prueba_Busqueda = "https://www.idealista.com/areas/venta-viviendas/con-pisos,duplex,aticos/?shape=%28%28_%7Dy%7DEdm%7C%5C%5Biw%40xCSJrn%40bAlEb%40ZqF%7E%40%29%29"
@@ -264,32 +264,20 @@ def getPhotography(wait, numImage):
         src = img.get_attribute('src')
         print("Imagen src : ", src)
         imageName = str(numImage) + "_" + nombreArchivo + r".jpg"
-        print("Nombre del archivo : ",imageName)
         imageCompleteName = rutaGuardado+ "\img_" + imageName
-        print("Ruta del archivo :", imageCompleteName)
-        print("Nombre del archivo : ",imageName)
+        print("Ruta del archivo  imagen : ",imageCompleteName)
         urllib.request.urlretrieve(src,imageCompleteName)
         print("Imagen guardada")
-    except :
-        print("Error guardando la imagen ")
+    except:
+        print("Error guardando la imagen")
     try:
         name = img.get_attribute('title')
         print("Nombre de la imagen web: ", name)
-    except OSError as err:
-        print("OS error: {0}".format(err))
-    except ImportError:
-        print("NO module found")
-    except ValueError:
-        print("Could not convert data to an integer.")
     except:
         print("ERROR con el nombre de la imagen")
         name = 'ERROR ERROR'
     return name
-
-def save_image_to_file(image, dirname, suffix):
-    with open('{dirname}/img_{suffix}.jpg'.format(dirname=dirname, suffix=suffix), 'wb') as out_file:
-        shutil.copyfileobj(image.raw, out_file)
-
+    
 def getFloor(wait):
     try:
         v_floor = wait.until(EC.presence_of_element_located((By.XPATH,"//div[@class='info-features']/span[3]/span"))).text
