@@ -62,11 +62,7 @@ tiempoEsperaInicial = 100000
 
 home = str(Path.home())
 #print("Ruta home : ", home)
-
-
 rutaGuardado = r"C:\selenium"
-
-
 ##RELLENAR AQUI el enlace y el nombre del fichero
 nombreArchivo = "default"
 url_Prueba_Busqueda = "default"
@@ -115,29 +111,31 @@ def extractLinksFotocasa(urlSearch):
     try:
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,".sui-AtomButton--primary"))).click()
         sleepRand()
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,".sui-AtomButton--primary"))).click()
     except:
         print("No he podido hacer click en la cookies...")
+    sleepRand()
     StringNumObjects = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,".re-SearchTitle-count"))).text
     NumObjects = int(StringNumObjects)
     print("Hay ", NumObjects, " resultados")
     pages = NumObjects/31;
-    print("Hay ",pages, " paginas")
+    print("Hay ",pages, " paginas aproximadamente...")
     page = 0
     linkActual = 0
     df = pd.DataFrame(columns = ['Link', 'Título','Precio', 'metros cuadrados','Planta','Referencia del portal', 'Inmobiliaria', 'número de fotos','Orientación','Tipo de anuncio', 'Descripción del anuncio'])          
     numPthotos = []
     numPthotos.clear()
-    while page < pages:
+    exit = NumObjects;
+    while exit > 0:
         page = page+1
         print("Extrayendo : pagina ", page, " de ", pages)
+        print("Quedan ", exit, " links aún");
         goDownPageLoadingAll(wait)
 
         try:
                 wait.until(EC.presence_of_element_located((By.XPATH,"//div[@class='re-Searchresult-itemRow']//div[@class='re-Card-secondary']/a[@class='re-Card-link']")))
                 houses = driver.find_elements_by_xpath("//div[@class='re-Searchresult-itemRow']//div[@class='re-Card-secondary']/a[@class='re-Card-link']")
                 numPhotograph=driver.find_elements_by_xpath("//div[@class='re-Searchresult-itemRow']/div/div[@class='re-Card-primary']/a/div[@class='re-Card-photosCounter']/span")
-                print("Links extraidos")
+                print("Numero de fotos extraidos : ", len(numPhotograph))
         except:
                 print("error extrayendo links... intento otra vez")
                 time.sleep(sleepTime*2)
@@ -159,14 +157,30 @@ def extractLinksFotocasa(urlSearch):
                 print(prefix , 'EEROR : Link ERROR')
         print("Extraidos ", len(links), " links")
         
+        exit=exit-len(links)
         
         for i in numPhotograph:
             try:
                 photosDef = i.text.replace('1/', '')
                 numPthotos.append(photosDef)
-                #print("Extraido el número de fotos :", photosDef)
+                print("Extraido el número de fotos :", photosDef)
             except:
                 print(prefix , 'EEROR : numFotos ERROR')
+        if(len(numPthotos)==0):
+            print("Algo raro pasa")
+            sleepRand()
+            try:
+                numPhotograph=driver.find_elements_by_xpath("//div[@class='re-Searchresult-itemRow']/div/div[@class='re-Card-primary']/a/div[@class='re-Card-multimediaCounter']/div[@class='re-Card-photosCounter']/span[last()]")
+                for i in numPhotograph:
+                    try:
+                        photosDef = i.text.replace('1/', '')
+                        numPthotos.append(photosDef)
+                        print("Extraido el número de fotos :", photosDef)
+                    except:
+                        printt(prefix , 'EEROR : numFotos ERROR')
+            except:
+                print("Raro rarísimo con las fotitos de los huevos")
+
         
         for x in links:
             print("Extrayendo página ", linkActual, " de un total de ", NumObjects)
@@ -199,8 +213,10 @@ def extractLinksFotocasa(urlSearch):
             if(debug==True): print(v_seller)
             v_orientation = fotocasaGetOrientation(wait)
             if(debug==True): print("Orientación : ",v_orientation)       
-            if(debug==True): print('Número de fotos :', numPthotos[linkActual-1])
-            
+            try:
+                if(debug==True): print('Número de fotos :', numPthotos[linkActual-1])
+            except:
+                numPthotos.append('ERROR')
             v_houseType = fotocasaGetHouseType(wait, driver)
             if(debug==True): print("Tipo de oferta : ",v_houseType)
             if(v_houseType == 'Piso'):
