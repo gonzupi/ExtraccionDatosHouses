@@ -208,7 +208,7 @@ def extractLinksFotocasa(url_text, start_time,rutaGuardado, nombreArchivo ):
             else:
                 v_floor = 'No es un piso ni un apartamento'
 
-            getPhotography(wait,linkActual)
+            getPhotography(wait,linkActual,nombreArchivo, rutaGuardado)
             v_comment = getComment(wait)
 
             df.loc[len(df)] = [x,v_titleHouse,v_priceHouse ,v_areaHouse,v_floor, v_reference,v_seller, numPthotos[linkActual-1],v_orientation, v_houseType, v_comment]
@@ -286,7 +286,6 @@ def sleepRandLong():
     time.sleep(timeDelay)
 
 def ClickNextPage(wait, waitLong, driver):
-
     try:
         nextButton = wait.until(EC.presence_of_element_located((By.XPATH,"//ul[@class='sui-PaginationBasic-list']/li[last()]/a")))
         driver.get(nextButton.get_attribute('href'))
@@ -376,7 +375,7 @@ def getArea(wait):
             v_houseArea = 'ERROR'
     return v_houseArea
 
-def getPhotography(wait, numImage):
+def getPhotography(wait, numImage,nombreArchivo, rutaGuardado):
     try:
         img =  wait.until(EC.presence_of_element_located((By.XPATH,"//div[@class='re-DetailSlider']//div/ul/li[1]/div[@class='re-DetailMultimediaImage-container re-DetailMultimediaImage-container--withHorizontalBorder']/img")))
         #print("Imagen obtenida")

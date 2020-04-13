@@ -95,7 +95,7 @@ def extractLinksPisos(url_text, start_time,rutaGuardado, nombreArchivo ):
     NumObjects = int(StringNumObjects.split()[0])
     print("Hay ", NumObjects, " resultados")
     linkActual = 0
-    df = pd.DataFrame(columns = ['Link', 'Título','Precio', 'metros cuadrados','Planta','Referencia del portal', 'Inmobiliaria', 'número de fotos','Orientación','Tipo de anuncio', 'Descripción del anuncio'])
+    df = pd.DataFrame(columns = ['Link', 'Título','Precio', 'metros cuadrados','Orientación','Planta','Referencia del portal', 'Inmobiliaria', 'número de fotos','Tipo de anuncio', 'Descripción del anuncio'])
     numPthotos = []
     numPthotos.clear()
     try:
@@ -130,33 +130,28 @@ def extractLinksPisos(url_text, start_time,rutaGuardado, nombreArchivo ):
         if(debug==True): print(v_reference)
         v_seller = getSeller(wait, driver)
         if(debug==True): print(v_seller)
-        v_orientation = getOrientation(wait)
-        if(debug==True): print("Orientación : ",v_orientation)
-        try:
-            if(debug==True): print('Número de fotos :', numPthotos[linkActual-1])
-        except:
-            numPthotos.append('ERROR')
-        v_houseType = getHouseType(wait, driver)
+        numPthotos = getNumberOfPhotos(wait)
+        if(debug==True): print(numPthotos)
+        v_orientacion = getOrientation(wait)
+        if(debug==True): print(v_orientacion)
+        v_comment = getComment(wait, driver)
+        v_houseType = getHouseType(v_titleHouse)
         if(debug==True): print("Tipo de oferta : ",v_houseType)
-        if(v_houseType == 'Piso'):
+        if(v_houseType == 'Piso' or v_houseType == 'Apartamento'):
             v_floor = getFloor(wait)
-            if(debug==True): print(v_floor)
-        elif(v_houseType == 'Apartamento'):
-            v_floor = getFloor(wait)
-            if(debug==True): print(v_floor)
         else:
             v_floor = 'No es un piso ni un apartamento'
+        if(debug==True): print(v_floor)
+        
+        getPhotography(wait,linkActual, nombreArchivo, rutaGuardado)
 
-        getPhotography(wait,linkActual)
-        v_comment = getComment(wait)
-
-        df.loc[len(df)] = [linkHouse,v_titleHouse,v_priceHouse ,v_areaHouse,v_floor, v_reference,v_seller, numPthotos[linkActual-1],v_orientation, v_houseType, v_comment]
+        df.loc[len(df)] = [linkHouse,v_titleHouse,v_priceHouse ,v_areaHouse,v_orientacion,v_floor, v_reference,v_seller, numPthotos, v_houseType, v_comment]
         '''
         print("Vamos a hacer click en siguiente")
         linkHouse = ClickNextPage(wait,waitLong,driver)
         sleepRand()
         exit = exit-1
-
+    
     driver.close()
     print("Extraidos ", pages, " links")
     #TODOS LOS DATOS EXTRAIDOS
@@ -170,29 +165,6 @@ def extractLinksPisos(url_text, start_time,rutaGuardado, nombreArchivo ):
     print(prefix,'Finalizado : Copia de datos al excel')
     print("Los datos estan en ", home, "\Desktop\datos_", nombreArchivo, ".csv")
     printElapsedTieme(start_time)
-
-def goDownPageLoadingAll(wait):
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-    sleepRand()
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-    sleepRand()
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-    sleepRand()
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-    sleepRand()
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-    sleepRand()
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-    sleepRand()
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-    sleepRand()
 
 def sleepRand():
     timeDelay = sleepTime + random.randrange(0, 3)
@@ -227,79 +199,69 @@ def save_image_to_file(image, dirname, suffix):
 ############################################
 # Estas funciones consiguen cada uno de los atributos de la página.
 
-def getHouseType(wait, driver):
-    try:
-        v_housetype = wait.until(EC.presence_of_element_located((By.XPATH,"//div[@class='re-DetailFeaturesList-featureContent']/p[@class='re-DetailFeaturesList-featureLabel' and contains(text(), 'Tipo de inmueble')]/../p[@class='re-DetailFeaturesList-featureValue']"))).text
-    except :
-        try:
-            v_housetype = wait.until(EC.presence_of_element_located((By.XPATH,"//div[@class='re-DetailFeaturesList-featureContent']/p[@class='re-DetailFeaturesList-featureLabel' and contains(text(), 'Tipo de inmueble')]/../p[@class='re-DetailFeaturesList-featureValue']"))).text
-        except:
-            print('ERROR : Obteniendo el tipo de oferta')
-            v_housetype = 'ERROR'
+def getHouseType(title):
+    v_housetype=title.split()[0]
     return v_housetype
 
 def getFloor(wait):
     try:
-        v_floor = wait.until(EC.presence_of_element_located((By.XPATH,"//div[@class='re-DetailFeaturesList-featureContent']/p[@class='re-DetailFeaturesList-featureLabel' and contains(text(), 'Planta')]/../p[@class='re-DetailFeaturesList-featureValue']"))).text
+        v_floor =wait.until(EC.presence_of_element_located((By.XPATH,"/html/body[@class='Pisos']/div[@class='body']//div[@class='basicdata-info']/div/div[@class='icon icon-planta']/../"))).text
     except :
-        try:
-            v_floor = wait.until(EC.presence_of_element_located((By.XPATH,"//div[@class='re-DetailFeaturesList-featureContent']/p[@class='re-DetailFeaturesList-featureLabel' and contains(text(), 'Planta')]/../p[@class='re-DetailFeaturesList-featureValue']"))).text
-        except:
-            print('ERROR : Obteniendo la planta')
-            v_floor = 'ERROR'
+        v_floor = 'ERROR obteniendo la planta'
     return v_floor
 
 def getTitle(wait):
     try:
-        v_houseTitle = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,"h1.re-DetailHeader-propertyTitle"))).text
+        v_houseTitle = wait.until(EC.presence_of_element_located((By.XPATH,"/html/body[@class='Pisos']/div[@class='body']//h1[@class='title']"))).text
     except :
         try:
-            v_houseTitle = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,"h1.re-DetailHeader-propertyTitle"))).text
+            v_houseTitle = wait.until(EC.presence_of_element_located((By.XPATH,"/html/body[@class='Pisos']/div[@class='body']//h1[@class='title']"))).text
         except:
-            print('ERROR : Obteniendo el título')
-            v_houseTitle = 'ERROR'
+            v_houseTitle = 'ERROR Obteniendo el título'
     return v_houseTitle
 
 def getPrice(wait):
     try:
-        v_housePrice = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,"span.re-DetailHeader-price"))).text
+        v_housePrice = wait.until(EC.presence_of_element_located((By.XPATH,"//span[@class='h1 jsPrecioH1']"))).text
     except :
         try:
-            v_housePrice = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,"span.re-DetailHeader-price"))).text
+            v_housePrice = wait.until(EC.presence_of_element_located((By.XPATH,"//div[@class='priceBox-price']/span"))).text
         except:
-            print('ERROR : Obteniendo el precio')
-            v_housePrice = 'ERROR'
+            v_housePrice = 'ERROR Obteniendo el precio'
     return v_housePrice
 
 def getOrientation(wait):
+    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
+    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
     try:
-        v_orientation = wait.until(EC.presence_of_element_located((By.XPATH,"//div[@class='re-DetailFeaturesList-featureContent']/p[@class='re-DetailFeaturesList-featureLabel' and contains(text(), 'Orientación')]/../p[@class='re-DetailFeaturesList-featureValue']"))).text
-    except :
-        try:
-            v_orientation = wait.until(EC.presence_of_element_located((By.XPATH,"//div[@class='re-DetailFeaturesList-featureContent']/p[@class='re-DetailFeaturesList-featureLabel' and contains(text(), 'Orientación')]/../p[@class='re-DetailFeaturesList-featureValue']"))).text
-        except:
-            print('ERROR : Obteniendo la orientación')
-            v_orientation = 'ERROR'
+        v_orientation = wait.until(EC.presence_of_element_located((By.XPATH,"//span[contains(text(),'Orientación')]/../span[last()]"))).text
+        v_orientation=v_orientation.replace(": ", "")
+    except : 
+        print('ERROR : Obteniendo la orientación')
+        v_orientation = 'ERROR'
+    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_UP)
+    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_UP)
     return v_orientation
 
 def getArea(wait):
     try:
-        v_houseArea = wait.until(EC.presence_of_element_located((By.XPATH,"//ul[@class='re-DetailHeader-features']//span[text()=' m²']/span[@class='re-DetailHeader-featuresItemValue']"))).text
+        v_houseArea = wait.until(EC.presence_of_element_located((By.XPATH,"//div[contains(text(),' m²')]"))).text
     except :
         try:
-            v_houseArea = wait.until(EC.presence_of_element_located((By.XPATH,"//ul[@class='re-DetailHeader-features']//span[text()=' m²']/span[@class='re-DetailHeader-featuresItemValue']"))).text
+            print("Area intento 2, pruebo por posición")
+            v_houseArea = wait.until(EC.presence_of_element_located((By.XPATH,"//div[@class='basicdata-info']/div[1]"))).text
         except:
             print('ERROR : Obteniendo el area')
             v_houseArea = 'ERROR'
     return v_houseArea
 
-def getPhotography(wait, numImage):
+def getPhotography(wait, numImage, nombreArchivo, rutaGuardado):
     try:
-        img =  wait.until(EC.presence_of_element_located((By.XPATH,"//div[@class='re-DetailSlider']//div/ul/li[1]/div[@class='re-DetailMultimediaImage-container re-DetailMultimediaImage-container--withHorizontalBorder']/img")))
+        img =  wait.until(EC.presence_of_element_located((By.XPATH,"//img[@id='mainPhotoPrint']")))
         #print("Imagen obtenida")
     except :
         try:
-            img =  wait.until(EC.presence_of_element_located((By.XPATH,"//div[@class='re-DetailSlider']//div/ul/li[1]/div[@class='re-DetailMultimediaImage-container re-DetailMultimediaImage-container--withHorizontalBorder']/img")))
+            img =  wait.until(EC.presence_of_element_located((By.XPATH,"//img[@id='mainPhotoPrint']")))
             #print("Imagen obtenida")
         except:
             print('ERROR : Obteniendo la imagen')
@@ -330,46 +292,60 @@ def getPhotography(wait, numImage):
         name = 'ERROR ERROR'
     return name
 
-def getReference(wait, driver):
-    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_UP)
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_UP)
-    sleepRand()
+def getNumberOfPhotos(wait):
     try:
-        v_reference = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,"span.re-ContactDetail-referenceContainer-reference"))).text
+        v_NumPhotos = wait.until(EC.presence_of_element_located((By.XPATH, "//div[@class='mediacounter']//span[@class='slash-photo']/../"))).text
+        v_NumPhotos=v_NumPhotos.replace("(1/", "")
+        v_NumPhotos=v_NumPhotos.replace(")", "")
     except :
         try:
-            v_reference = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,"span.re-ContactDetail-referenceContainer-reference"))).text
+            v_NumPhotos = wait.until(EC.presence_of_element_located((By.XPATH,"//div[@class='mediacounter']//span[@class='semibold']"))).text
+            v_NumPhotos=v_NumPhotos.replace("(1/", "")
+            v_NumPhotos=v_NumPhotos.replace(")", "")
         except:
-            print('ERROR : Obteniendo la referencia')
-            v_reference = 'ERROR'
-    driver.execute_script("window.scrollTo(0, 0);")
+            print('ERROR : Obteniendo el numero de fotos')
+            v_NumPhotos = 'ERROR'
+    return v_NumPhotos
+
+def getReference(wait, driver):
+    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
+    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
+    try:
+        v_reference = wait.until(EC.presence_of_element_located((By.XPATH,"//span[@class='icon icon-inline icon-referencia']/../span[2]"))).text
+        v_reference=v_reference.replace(": ", "")
+
+    except :
+        print('ERROR : Obteniendo la referencia')
+        v_reference = 'ERROR'
+    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_UP)
+    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_UP)
     return v_reference
 
 def getSeller(wait, driver):
-    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_UP)
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_UP)
-    sleepRand()
+    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
     try:
-        v_seller = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,"span.re-ContactDetail-inmoContainer-clientName"))).text
+        v_seller = wait.until(EC.presence_of_element_located((By.XPATH,"//div[@class='owner-data']//div[@class='owner-data-info']/a"))).text
     except :
         try:
-            v_seller = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,".re-ContactDetail-inmoContainer-clientName"))).text
+            v_seller = wait.until(EC.presence_of_element_located((By.XPATH,"//div[@class='owner-data']//div[@class='owner-data-info']/a"))).text
         except:
             print('ERROR : Obteniendo el vendedor')
             v_seller = 'ERROR'
     driver.execute_script("window.scrollTo(0, 0);")
     return v_seller
 
-def getComment(wait):
+def getComment(wait, driver):
+    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
+    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
     try:
-        v_comment = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,".fc-DetailDescription"))).text
+        wait.until(EC.presence_of_element_located((By.XPATH, "//div[@id='description' and @class='description']/a[@class='show-more']"))).click()
+        v_comment = wait.until(EC.presence_of_element_located((By.XPATH, "//div[@id='descriptionBody']"))).text
     except :
         try:
-            wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-            v_comment = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,".fc-DetailDescription"))).text
+            wait.until(EC.presence_of_element_located((By.XPATH, "//div[@id='description' and @class='description']/a[@class='show-more']"))).click()
+            v_comment = wait.until(EC.presence_of_element_located((By.XPATH, "//div[@id='descriptionBody']"))).text
         except:
             print('ERROR : Obteniendo el comentario')
             v_comment = 'ERROR'
+    driver.execute_script("window.scrollTo(0, 0);")
     return v_comment
