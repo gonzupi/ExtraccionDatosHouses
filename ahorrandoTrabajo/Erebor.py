@@ -53,7 +53,7 @@ proxy = Proxy({
     'noProxy':''})
 home = str(Path.home())
 debug = True #Esto hace que vayan mostrandose los mensajes por el terminal, cambiar a False si se quiere
-tiempoEspera = 5
+tiempoEspera = 3
 tiempoEsperaInicial = 100000
 sleepTime = 2 # mas rand de 2 segundos
 ################################################################################################################
@@ -84,161 +84,78 @@ def extractLinksPisos(url_text, start_time,rutaGuardado, nombreArchivo ):
     driver.get(url_text)
     waitLong.until(EC.url_contains(url_text))
     sleepRand()
-    sleepRand()
     try:
-        wait.until(EC.presence_of_element_located((By.XPATH,"//h1[text()='Pardon Our Interruption...']")))
-        print("Ey! un capcha!")
-        winsound.Beep(frequency, duration)
-        waitLong.until(EC.presence_of_element_located((By.CSS_SELECTOR,".sui-AtomButton--primary")))
-        print("Capcha pasado, amos q nos vamos")
-    except:
-        print("No veo capcha...")
-    try:
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,".sui-AtomButton--primary"))).click()
+        wait.until(EC.presence_of_element_located((By.XPATH,"//button[@id='didomi-notice-agree-button']"))).click()
         sleepRand()
     except:
         print("No he podido hacer click en la cookies...")
     sleepRand()
-    StringNumObjects = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,".re-SearchTitle-count"))).text
-    NumObjects = int(StringNumObjects)
+    StringNumObjects = wait.until(EC.presence_of_element_located((By.XPATH,"//span[@class='total-results']"))).text 
+    
+    NumObjects = int(StringNumObjects.split()[0])
     print("Hay ", NumObjects, " resultados")
-    pages = NumObjects/31;
-    print("Hay ",pages, " paginas aproximadamente...")
-    page = 0
     linkActual = 0
     df = pd.DataFrame(columns = ['Link', 'Título','Precio', 'metros cuadrados','Planta','Referencia del portal', 'Inmobiliaria', 'número de fotos','Orientación','Tipo de anuncio', 'Descripción del anuncio'])
     numPthotos = []
     numPthotos.clear()
+    try:
+        links=driver.find_elements_by_xpath("//div[@id='parrilla']/div[@data-listado-row='true']//a[@class='anuncioLink']")
+        linkHouse =links[0].get_attribute('href')               
+    except:
+        print("error extrayendo primer link... intento otra vez")
+        time.sleep(sleepTime*2)
+        try:
+            links=driver.find_elements_by_xpath("//div[@class='content parrilla']/div[@class='gridList Listado' and @id='parrilla']/div[@data-listado-row='true']//a[@class='anuncioLink']")
+            linkHouse =links[0].get_attribute('data-navigate-ref')  
+            print("Primer link extraido")
+        except:
+            print("ERROR : No encuentro el primer link...")
     exit = NumObjects;
+    driver.get(linkHouse)
     while exit > 0:
-        page = page+1
-        print("Extrayendo : pagina ", page, " de ", pages)
-        print("Quedan ", exit, " links aún");
-        goDownPageLoadingAll(wait)
+        print("Extrayendo página ", linkActual, " de un total de ", NumObjects)
+        printElapsedTieme(start_time)
+        linkActual = linkActual+1
+        sleepRand()
+        #EXTRAIGO LOS DATOS
+        '''
+        if(debug==True): print(linkHouse)
+        v_titleHouse = getTitle(wait)
+        if(debug==True): print(v_titleHouse)
+        v_priceHouse = getPrice(wait)
+        if(debug==True): print(v_priceHouse, " €")
+        v_areaHouse = getArea(wait)
+        if(debug==True): print(v_areaHouse, " m^2")
+        v_reference = getReference(wait, driver)
+        if(debug==True): print(v_reference)
+        v_seller = getSeller(wait, driver)
+        if(debug==True): print(v_seller)
+        v_orientation = getOrientation(wait)
+        if(debug==True): print("Orientación : ",v_orientation)
         try:
-                wait.until(EC.presence_of_element_located((By.XPATH,"//div[@class='re-Searchresult-itemRow']//div[@class='re-Card-secondary']/a[@class='re-Card-link']")))
-                houses = driver.find_elements_by_xpath("//div[@class='re-Searchresult-itemRow']//div[@class='re-Card-secondary']/a[@class='re-Card-link']")
-                numPhotograph=driver.find_elements_by_xpath("//div[@class='re-Searchresult-itemRow']/div/div[@class='re-Card-primary']/a/div[@class='re-Card-photosCounter']/span")
-                print("Numero de fotos extraidos : ", len(numPhotograph))
+            if(debug==True): print('Número de fotos :', numPthotos[linkActual-1])
         except:
-                print("error extrayendo links... intento otra vez")
-                time.sleep(sleepTime*2)
-                try:
-                    wait.until(EC.presence_of_element_located((By.XPATH,"//div[@class='re-Searchresult-itemRow']//div[@class='re-Card-secondary']/a[@class='re-Card-link']")))
-                    houses = driver.find_elements_by_xpath("//div[@class='re-Searchresult-itemRow']//div[@class='re-Card-secondary']/a[@class='re-Card-link']")
-                    numPhotograph=driver.find_elements_by_xpath("//div[@class='re-Searchresult-itemRow']/div/div[@class='re-Card-primary']/a/div[@class='re-Card-photosCounter']/span")
-                    print("Links extraidos")
-                except:
-                    print("ERROR : No encuentro los links...")
-        links = []
-        links.clear()
-        for i in houses:
-            try:
-                links.append(i.get_attribute('href'))
-                #print("Extraido el link :", i.get_attribute('href'))
-            except:
-                print(prefix , 'EEROR : Link ERROR')
-        print("Extraidos ", len(links), " links")
+            numPthotos.append('ERROR')
+        v_houseType = getHouseType(wait, driver)
+        if(debug==True): print("Tipo de oferta : ",v_houseType)
+        if(v_houseType == 'Piso'):
+            v_floor = getFloor(wait)
+            if(debug==True): print(v_floor)
+        elif(v_houseType == 'Apartamento'):
+            v_floor = getFloor(wait)
+            if(debug==True): print(v_floor)
+        else:
+            v_floor = 'No es un piso ni un apartamento'
 
-        exit=exit-len(links)
-        for i in numPhotograph:
-            try:
-                photosDef = i.text.replace('1/', '')
-                numPthotos.append(photosDef)
-                print("Extraido el número de fotos :", photosDef)
-            except:
-                print(prefix , 'EEROR : numFotos ERROR')
-        if(len(numPthotos)==0):
-            print("Algo raro pasa")
-            sleepRand()
-            try:
-                numPhotograph=driver.find_elements_by_xpath("//div[@class='re-Searchresult-itemRow']/div/div[@class='re-Card-primary']/a/div[@class='re-Card-multimediaCounter']/div[@class='re-Card-photosCounter']/span[last()]")
-                for i in numPhotograph:
-                    try:
-                        photosDef = i.text.replace('1/', '')
-                        numPthotos.append(photosDef)
-                        print("Extraido el número de fotos :", photosDef)
-                    except:
-                        printt(prefix , 'EEROR : numFotos ERROR')
-            except:
-                print("Raro rarísimo con las fotitos de los huevos")
-        for x in links:
-            print("Extrayendo página ", linkActual, " de un total de ", NumObjects)
-            printElapsedTieme(start_time)
-            linkActual = linkActual+1
+        getPhotography(wait,linkActual)
+        v_comment = getComment(wait)
 
-            sleepRand()
-
-            driver.get(x)
-            try:
-                wait.until(EC.presence_of_element_located((By.XPATH,"//h1[text()='Pardon Our Interruption...']")))
-                print("Ey! un capcha!")
-                winsound.Beep(frequency, duration)
-                waitLong.until(EC.presence_of_element_located((By.CSS_SELECTOR,".sui-AtomButton--primary")))
-                print("Capcha pasado, amos q nos vamos")
-            except:
-                print("No veo capcha...")
-
-            #EXTRAIGO LOS DATOS
-            if(debug==True): print(x)
-            v_titleHouse = getTitle(wait)
-            if(debug==True): print(v_titleHouse)
-            v_priceHouse = getPrice(wait)
-            if(debug==True): print(v_priceHouse, " �")
-            v_areaHouse = getArea(wait)
-            if(debug==True): print(v_areaHouse, " m^2")
-            v_reference = getReference(wait, driver)
-            if(debug==True): print(v_reference)
-            v_seller = getSeller(wait, driver)
-            if(debug==True): print(v_seller)
-            v_orientation = getOrientation(wait)
-            if(debug==True): print("Orientación : ",v_orientation)
-            try:
-                if(debug==True): print('Número de fotos :', numPthotos[linkActual-1])
-            except:
-                numPthotos.append('ERROR')
-            v_houseType = getHouseType(wait, driver)
-            if(debug==True): print("Tipo de oferta : ",v_houseType)
-            if(v_houseType == 'Piso'):
-                v_floor = getFloor(wait)
-                if(debug==True): print(v_floor)
-            elif(v_houseType == 'Apartamento'):
-                v_floor = getFloor(wait)
-                if(debug==True): print(v_floor)
-            else:
-                v_floor = 'No es un piso ni un apartamento'
-
-            getPhotography(wait,linkActual)
-            v_comment = getComment(wait)
-
-            df.loc[len(df)] = [x,v_titleHouse,v_priceHouse ,v_areaHouse,v_floor, v_reference,v_seller, numPthotos[linkActual-1],v_orientation, v_houseType, v_comment]
-
-        print("Amos a hacer click en siguiente")
-        driver.get(url_text)
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
+        df.loc[len(df)] = [linkHouse,v_titleHouse,v_priceHouse ,v_areaHouse,v_floor, v_reference,v_seller, numPthotos[linkActual-1],v_orientation, v_houseType, v_comment]
+        '''
+        print("Vamos a hacer click en siguiente")
+        linkHouse = ClickNextPage(wait,waitLong,driver)
         sleepRand()
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-        sleepRand()
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-        ClickNextPage(wait,waitLong,driver)
-        sleepRand()
-        try:
-            wait.until(EC.presence_of_element_located((By.XPATH,"//h1[text()='Pardon Our Interruption...']")))
-            print("Ey! un capcha!")
-            winsound.Beep(frequency, duration)
-            waitLong.until(EC.presence_of_element_located((By.CSS_SELECTOR,".sui-AtomButton--primary")))
-            print("Capcha pasado, amos q nos vamos")
-        except:
-            print("No veo capcha...")
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-        url_text = driver.current_url
+        exit = exit-1
 
     driver.close()
     print("Extraidos ", pages, " links")
@@ -286,11 +203,11 @@ def sleepRandLong():
     time.sleep(timeDelay)
 
 def ClickNextPage(wait, waitLong, driver):
-
     try:
-        nextButton = wait.until(EC.presence_of_element_located((By.XPATH,"//ul[@class='sui-PaginationBasic-list']/li[last()]/a")))
-        driver.get(nextButton.get_attribute('href'))
+        nextButton = wait.until(EC.presence_of_element_located((By.XPATH,"//a[@id='lnkNextPreview']")))
+        nextLink = driver.get(nextButton.get_attribute('href'))
         print("Click en siguiente exitoso")
+        return nextLink
     except:
         print("ERROR haciendo click en siguiente")
 

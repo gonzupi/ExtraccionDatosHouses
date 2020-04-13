@@ -184,7 +184,7 @@ def extractLinksFotocasa(url_text, start_time,rutaGuardado, nombreArchivo ):
             v_titleHouse = getTitle(wait)
             if(debug==True): print(v_titleHouse)
             v_priceHouse = getPrice(wait)
-            if(debug==True): print(v_priceHouse, " �")
+            if(debug==True): print(v_priceHouse, " €")
             v_areaHouse = getArea(wait)
             if(debug==True): print(v_areaHouse, " m^2")
             v_reference = getReference(wait, driver)

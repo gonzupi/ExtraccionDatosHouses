@@ -28,22 +28,8 @@ rutaGuardado = os.path.dirname(os.path.realpath(__file__))# r"C:\selenium"
 ################################################################################################################
 nombreArchivo = ""
 url_text = ""
-################################################################################################################
-print('Iniciando...')
-#mainCode
-################################################################################################################
 
-#print("IP local del dispositivo : ",host_ip)
-if len(sys.argv) == 2:
-    url_text = sys.argv[1]
-elif len(sys.argv) == 3:
-    url_text = sys.argv[1]
-    nombreArchivo = sys.argv[2]
-elif len(sys.argv) < 2:
-    while(url_text.find("www.idealista") == -1 and url_text.find("www.fotocasa") == -1 and url_text.find("www.pisos") == -1):
-        url_text = input("Introduzca la url de IDEALISTA, FOTOCASA o PISOS para realizar la extracción : ")
-        if(url_text.find("www.idealista") == -1 and url_text.find("www.fotocasa") == -1 and url_text.find("www.pisos") == -1):
-            print("Link no valido, prueba otra vez")
+def saveConfig():
     print("La ruta donde se guardará la carpeta de la extracción será : ",rutaGuardado)
     print("Ahora establezca el nombre de esta carpeta en la que se guardarán los datos : ")
     nombreArchivo =input()
@@ -53,6 +39,23 @@ elif len(sys.argv) < 2:
     except:
       os.mkdir(directorio)
     print("Los datos se guardarán en ", directorio)
+
+################################################################################################################
+print('Iniciando...')
+#mainCode
+#print("IP local del dispositivo : ",host_ip)
+if len(sys.argv) == 2:
+    url_text = sys.argv[1]
+    saveConfig()
+elif len(sys.argv) == 3:
+    url_text = sys.argv[1]
+    nombreArchivo = sys.argv[2]
+elif len(sys.argv) < 2:
+    while(url_text.find("www.idealista") == -1 and url_text.find("www.fotocasa") == -1 and url_text.find("www.pisos") == -1):
+        url_text = input("Introduzca la url de IDEALISTA, FOTOCASA o PISOS para realizar la extracción : \n")
+        if(url_text.find("www.idealista") == -1 and url_text.find("www.fotocasa") == -1 and url_text.find("www.pisos") == -1):
+            print("Link no valido, prueba otra vez")
+    saveConfig()
 if(url_text.find("www.fotocasa") != -1):
     print("Iniciando extracción de datos para fotocasa.com")
     FirefoxThread = threading.Thread(target=Dumbledore.extractLinksFotocasa(url_text, start_time, rutaGuardado, nombreArchivo))
