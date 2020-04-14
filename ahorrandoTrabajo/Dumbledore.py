@@ -58,7 +58,7 @@ sleepTime = 2 # mas rand de 2 segundos
 ################################################################################################################
 
 #Esta es la función de extracción para IDEALISTA
-def extractLinksFotocasa(url_text, start_time,saveDir, dataFileName ):
+def extractLinksFotocasa(URLText, startTime,saveDir, dataFileName ):
     #INICIO FIREFOX
     #########################################################################################
     prefix = "MF_" #Para saber desde qu� hebra ejecuto cada cosa si uso varios navegadores uso siempre el prefijo del navegador antes de mostrar un mensaje
@@ -80,8 +80,8 @@ def extractLinksFotocasa(url_text, start_time,saveDir, dataFileName ):
     driver.maximize_window()
     ###########################################################################################
     sleepRand()
-    driver.get(url_text)
-    waitLong.until(EC.url_contains(url_text))
+    driver.get(URLText)
+    waitLong.until(EC.url_contains(URLText))
     sleepRand()
     sleepRand()
     try:
@@ -162,7 +162,7 @@ def extractLinksFotocasa(url_text, start_time,saveDir, dataFileName ):
                 print("Raro rarísimo con las fotitos de los huevos")
         for link in allLinks:
             print("Extrayendo página ", linkActual, " de un total de ", NumObjects)
-            printElapsedTieme(start_time)
+            printElapsedTieme(startTime)
             linkActual = linkActual+1
             sleepRand()
             driver.get(link)
@@ -206,7 +206,7 @@ def extractLinksFotocasa(url_text, start_time,saveDir, dataFileName ):
             v_comment = getComment(wait)
             df.loc[len(df)] = [link,v_titleHouse,v_priceHouse ,v_areaHouse,v_floor, v_reference,v_seller, numPthotos[linkActual-1],v_orientation, v_houseType, v_comment]
         print("Amos a hacer click en siguiente")
-        driver.get(url_text)
+        driver.get(URLText)
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
@@ -230,7 +230,7 @@ def extractLinksFotocasa(url_text, start_time,saveDir, dataFileName ):
             print("No veo capcha...")
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-        url_text = driver.current_url
+        URLText = driver.current_url
     driver.close()
     print("Extraidos ", pages, " links")
     #TODOS LOS DATOS EXTRAIDOS
@@ -243,7 +243,7 @@ def extractLinksFotocasa(url_text, start_time,saveDir, dataFileName ):
     df_copy.to_csv(saveDir + "\datos_"+dataFileName+'.csv', encoding='utf-8', index=False)
     print(prefix,'Finalizado : Copia de datos al excel')
     print("Los datos estan en ", saveDir)
-    printElapsedTieme(start_time)
+    printElapsedTieme(startTime)
 
 def goDownPageLoadingAll(wait):
     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)

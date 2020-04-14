@@ -55,7 +55,7 @@ waitTimeDefault = 5
 waitTimeLong = 100000
 sleepTime = 2 # mas rand de 2 segundos
 ################################################################################################################
-def extractLinksIdealista(url_text, start_time, saveDir, dataFileName):
+def extractLinksIdealista(URLText, startTime, saveDir, dataFileName):
     #INICIO FIREFOX
     #########################################################################################
     prefix = "MF_" #Para saber desde qué hebra ejecuto cada cosa uso siempre el prefijo del navegador antes de mostrar un mensaje
@@ -69,7 +69,7 @@ def extractLinksIdealista(url_text, start_time, saveDir, dataFileName):
     wait = WebDriverWait(driver,waitTimeDefault)
     driver.maximize_window()
     ###########################################################################################
-    driver.get(url_text)
+    driver.get(URLText)
     sleepRand()
     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
@@ -110,7 +110,7 @@ def extractLinksIdealista(url_text, start_time, saveDir, dataFileName):
         print("Extraidos ", len(links), " links")
         for x in links:
             print("Extrayendo página ", linkActual, " de un total de ", NumObjects[0])
-            printElapsedTieme(start_time)
+            printElapsedTieme(startTime)
             linkActual = linkActual+1
             sleepRand()
             driver.get(x)
@@ -140,7 +140,7 @@ def extractLinksIdealista(url_text, start_time, saveDir, dataFileName):
             #if(debug==True): print(v_comment)
             #['Link', 'Título','Precio', 'metros cuadrados','Piso', 'Referencia del portal','Inmoviliaria', 'Nº fotos'])
             df.loc[len(df)] = [x,v_titleHouse,v_priceHouse ,v_areaHouse,v_NumRooms, v_floor,v_reference,v_seller, v_numPhotos, photoText[1], v_comment]
-        driver.get(url_text)
+        driver.get(URLText)
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
@@ -154,7 +154,7 @@ def extractLinksIdealista(url_text, start_time, saveDir, dataFileName):
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
         clickNextPage(wait)
-        url_text = driver.current_url
+        URLText = driver.current_url
     driver.close()
     print("Extraidos ", pages, " links")
     #Datos extraidos
@@ -167,7 +167,7 @@ def extractLinksIdealista(url_text, start_time, saveDir, dataFileName):
     df_copy.to_csv(saveDir + "\datos_"+dataFileName+'.csv', encoding='utf-8', index=False)
     print(prefix,'Finalizado : Copia de datos al excel')
     print("Los datos están en ", home, "\Desktop\datos_", dataFileName, ".csv")
-    printElapsedTieme(start_time)
+    printElapsedTieme(startTime)
 
 def printElapsedTieme(started_time):
     temp = time.time() - started_time

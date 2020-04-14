@@ -59,7 +59,7 @@ sleepTime = 4 # mas rand de 2 segundos
 ################################################################################################################
 
 #Esta es la función principal de IDEALISTA
-def extractLinksPisos(url_text, start_time,saveDir, dataFileName ):
+def extractLinksPisos(URLText, startTime,saveDir, dataFileName ):
     #INICIO FIREFOX
     #########################################################################################
     prefix = "MF_" #Para saber desde qu� hebra ejecuto cada cosa uso siempre el prefijo del navegador antes de mostrar un mensaje
@@ -81,8 +81,8 @@ def extractLinksPisos(url_text, start_time,saveDir, dataFileName ):
     driver.maximize_window()
     ###########################################################################################
     sleepRand()
-    driver.get(url_text)
-    waitLong.until(EC.url_contains(url_text))
+    driver.get(URLText)
+    waitLong.until(EC.url_contains(URLText))
     sleepRand()
     try:
         wait.until(EC.presence_of_element_located((By.XPATH,"//button[@id='didomi-notice-agree-button']"))).click()
@@ -114,7 +114,7 @@ def extractLinksPisos(url_text, start_time,saveDir, dataFileName ):
     driver.get(linkHouse)
     while exit > 0:
         print("Extrayendo página ", linkActual, " de un total de ", NumObjects)
-        printElapsedTieme(start_time)
+        printElapsedTieme(startTime)
         linkActual = linkActual+1
         sleepRand()
         #EXTRAIGO LOS DATOS
@@ -163,7 +163,7 @@ def extractLinksPisos(url_text, start_time,saveDir, dataFileName ):
     df_copy.to_csv(saveDir + "\datos_"+dataFileName+'.csv', encoding='utf-8', index=False)
     print(prefix,'Finalizado : Copia de datos al excel')
     print("Los datos estan en ",saveDir)
-    printElapsedTieme(start_time)
+    printElapsedTieme(startTime)
 
 def sleepRand():
     timeDelay = sleepTime + random.randrange(0, 3)
