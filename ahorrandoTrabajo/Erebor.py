@@ -52,7 +52,7 @@ proxy = Proxy({
     'sslProxy': myProxy,
     'noProxy':''})
 home = str(Path.home())
-debug = True #Esto hace que vayan mostrandose los mensajes por el terminal, cambiar a False si se quiere
+debug = False #Esto hace que vayan mostrandose los mensajes por el terminal, cambiar a False si se quiere
 waitTimeDefault = 2
 waitTimeLong = 100000
 sleepTime = 2 # mas rand de 2 segundos
@@ -106,7 +106,7 @@ def extractLinksPisos(URLText, startTime,saveDir, dataFileName ):
         links=driver.find_elements_by_xpath("//div[@id='parrilla']/div[@data-listado-row='true']//a[@class='anuncioLink']")
         
     except:
-        print("error extrayendo primer link... intento otra vez")
+        print("ERROR : extrayendo primer link... intento otra vez")
         time.sleep(sleepTime*2)
         try:
             links=driver.find_elements_by_xpath("//div[@class='content parrilla']/div[@class='gridList Listado' and @id='parrilla']/div[@data-listado-row='true']//a[@class='anuncioLink']")
@@ -121,20 +121,19 @@ def extractLinksPisos(URLText, startTime,saveDir, dataFileName ):
             #print("Extraido el link :", i.get_attribute('href'))
         except:
             print(prefix , 'EEROR : Link ERROR')
-    print("Extraidos ", len(allLinks), " links")
     #checkStatus(linkHouse,exit,numObjectsm,driver, wait, waitLong)
     linkActual = 0
     while exit > 0:
         print("Extrayendo link ", NumObjects-exit, " de un total de ", NumObjects, ", hay ", len(links)-linkActual, " links más de esta pagina")
         linkHouse=allLinks[linkActual]
-        if(debug==True): print(linkHouse)
+        print(linkHouse)
         driver.get(linkHouse)
         printElapsedTieme(startTime)
         sleepRand()
         #EXTRAIGO LOS DATOS
         
         v_titleHouse = getTitle(wait)
-        if(debug==True): print(v_titleHouse)
+        print(v_titleHouse)
         v_priceHouse = getPrice(wait)
         if(debug==True): print(v_priceHouse, " €")
         v_areaHouse = getArea(wait)
@@ -160,7 +159,6 @@ def extractLinksPisos(URLText, startTime,saveDir, dataFileName ):
 
         df.loc[len(df)] = [linkHouse,v_titleHouse,v_priceHouse ,v_areaHouse,v_orientacion,v_floor, v_reference,v_seller, numPthotos, v_houseType, v_comment]
         
-        print("Vamos a hacer click en siguiente")
         #linkHouse = ClickNextPageRight(wait,waitLong,driver)
         linkActual = linkActual+1
         if(linkActual >= len(links) and exit>1):
@@ -185,12 +183,12 @@ def extractLinksPisos(URLText, startTime,saveDir, dataFileName ):
                 try:
                     wait.until(EC.presence_of_element_located((By.XPATH,"//span[contains(text(),'Siguiente')]"))).click()
                 except:
-                    print("ERROR haciendo click en siguiente página")
+                    print("ERROR : haciendo click en siguiente página")
             linkMainSearch=driver.current_url
             try:
                 links=driver.find_elements_by_xpath("//div[@id='parrilla']/div[@data-listado-row='true']//a[@class='anuncioLink']")
             except:
-                print("error extrayendo primer link... intento otra vez")
+                print("ERROR : extrayendo primer link... intento otra vez")
                 time.sleep(sleepTime*2)
                 try:
                     links=driver.find_elements_by_xpath("//div[@class='content parrilla']/div[@class='gridList Listado' and @id='parrilla']/div[@data-listado-row='true']//a[@class='anuncioLink']")

@@ -50,7 +50,7 @@ proxy = Proxy({
     'sslProxy': myProxy,
     'noProxy':''})
 home = str(Path.home())
-debug = True #Esto hace que vayan mostrandose los mensajes por el terminal, cambiar a False si se quiere
+debug = False #Esto hace que vayan mostrandose los mensajes por el terminal, cambiar a False si se quiere
 waitTimeDefault = 5
 waitTimeLong = 100000
 sleepTime = 2 # mas rand de 2 segundos
@@ -115,9 +115,9 @@ def extractLinksIdealista(URLText, startTime, saveDir, dataFileName):
             sleepRand()
             driver.get(x)
             #Extraigo los datos
-            if(debug==True): print(x)
+            print(x)
             v_titleHouse = getTitle(wait)
-            if(debug==True): print(v_titleHouse)
+            print(v_titleHouse)
             v_priceHouse = getPrice(wait)
             if(debug==True): print(v_priceHouse, " €")
             v_areaHouse = getArea(wait)
@@ -245,19 +245,19 @@ def getPhotography(wait, numImage,dataFileName, saveDir):
             img = 'ERROR'
     try:
         src = img.get_attribute('src')
-        print("Imagen src : ", src)
+        if(debug==True):print("Imagen src : ", src)
         imageName = str(numImage) + "_" + dataFileName + r".jpg"
         print("Nombre del archivo : ",imageName)
         imageCompleteName = saveDir+ "\img_" + imageName
         print("Ruta del archivo :", imageCompleteName)
-        print("Nombre del archivo : ",imageName)
+        if(debug==True):print("Nombre del archivo : ",imageName)
         urllib.request.urlretrieve(src,imageCompleteName)
-        print("Imagen guardada")
+        if(debug==True):print("Imagen guardada")
     except :
         print("Error guardando la imagen ")
     try:
         name = img.get_attribute('title')
-        print("Nombre de la imagen web: ", name)
+        if(debug==True):print("Nombre de la imagen web: ", name)
     except OSError as err:
         print("OS error: {0}".format(err))
     except ImportError:

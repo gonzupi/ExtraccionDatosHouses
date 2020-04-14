@@ -51,7 +51,7 @@ proxy = Proxy({
     'ftpProxy': myProxy,
     'sslProxy': myProxy,
     'noProxy':''})
-debug = True #Esto hace que vayan mostrandose los mensajes por el terminal, cambiar a False si se quiere
+debug = False #Esto hace que vayan mostrandose los mensajes por el terminal, cambiar a False/True si se quiere
 waitTimeDefault = 5
 waitTimeLong = 100000
 sleepTime = 2 # mas rand de 2 segundos
@@ -118,7 +118,7 @@ def extractLinksFotocasa(URLText, startTime,saveDir, dataFileName ):
                 wait.until(EC.presence_of_element_located((By.XPATH,"//div[@class='re-Searchresult-itemRow']//div[@class='re-Card-secondary']/a[@class='re-Card-link']")))
                 houses = driver.find_elements_by_xpath("//div[@class='re-Searchresult-itemRow']//div[@class='re-Card-secondary']/a[@class='re-Card-link']")
                 numPhotograph=driver.find_elements_by_xpath("//div[@class='re-Searchresult-itemRow']/div/div[@class='re-Card-primary']/a/div[@class='re-Card-photosCounter']/span")
-                print("Numero de fotos extraidos : ", len(numPhotograph))
+                if(debug==True):print("Numero de fotos extraidos : ", len(numPhotograph))
         except:
                 print("error extrayendo links... intento otra vez")
                 time.sleep(sleepTime*2)
@@ -126,7 +126,7 @@ def extractLinksFotocasa(URLText, startTime,saveDir, dataFileName ):
                     wait.until(EC.presence_of_element_located((By.XPATH,"//div[@class='re-Searchresult-itemRow']//div[@class='re-Card-secondary']/a[@class='re-Card-link']")))
                     houses = driver.find_elements_by_xpath("//div[@class='re-Searchresult-itemRow']//div[@class='re-Card-secondary']/a[@class='re-Card-link']")
                     numPhotograph=driver.find_elements_by_xpath("//div[@class='re-Searchresult-itemRow']/div/div[@class='re-Card-primary']/a/div[@class='re-Card-photosCounter']/span")
-                    print("Links extraidos")
+                    if(debug==True):print("Links extraidos")
                 except:
                     print("ERROR : No encuentro los links...")
         allLinks = []
@@ -134,7 +134,7 @@ def extractLinksFotocasa(URLText, startTime,saveDir, dataFileName ):
         for i in houses:
             try:
                 allLinks.append(i.get_attribute('href'))
-                #print("Extraido el link :", i.get_attribute('href'))
+                if(debug==True):print("Extraido el link :", i.get_attribute('href'))
             except:
                 print(prefix , 'EEROR : Link ERROR')
         print("Extraidos ", len(allLinks), " links")
@@ -147,7 +147,7 @@ def extractLinksFotocasa(URLText, startTime,saveDir, dataFileName ):
             except:
                 print(prefix , 'EEROR : numFotos ERROR')
         if(len(numPthotos)==0):
-            print("Algo raro pasa")
+            if(debug==True):print("Algo raro pasa")
             sleepRand()
             try:
                 numPhotograph=driver.find_elements_by_xpath("//div[@class='re-Searchresult-itemRow']/div/div[@class='re-Card-primary']/a/div[@class='re-Card-multimediaCounter']/div[@class='re-Card-photosCounter']/span[last()]")
@@ -175,9 +175,9 @@ def extractLinksFotocasa(URLText, startTime,saveDir, dataFileName ):
             except:
                 print("No veo capcha...")
             #EXTRAIGO LOS DATOS
-            if(debug==True): print(link)
+            print(link)
             v_titleHouse = getTitle(wait)
-            if(debug==True): print(v_titleHouse)
+            print(v_titleHouse)
             v_priceHouse = getPrice(wait)
             if(debug==True): print(v_priceHouse, " €")
             v_areaHouse = getArea(wait)
