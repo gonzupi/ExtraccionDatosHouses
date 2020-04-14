@@ -1,5 +1,1 @@
-scorecardpy 
-pandas
-selenium
-scipy
-pickle
+python -m pip install scorecardpy pandas selenium scipy pickle requests request urllib3 

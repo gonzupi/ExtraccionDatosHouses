@@ -2,777 +2,90 @@
 '''
 Created on 19 nov. 2019
 @author: Gonzalo Bueno Santana
-Programa pensado para extraer datos de la plataforma YouTube usando diferentes navegadores : Google Chrome, Mozilla Firefox, Microsoft Edge y Opera
-El programa extrae información con sesión iniciada y sin la sesión iniciada para después compararla
+Programa pensado para extraer datos de plataformas de alquiler usando diferentes navegadores : Google Chrome, Mozilla Firefox, Microsoft Edge y Opera
+De momento el programa extrae los datos desde dos webs:fotocasa y idealista.
+He restringido el uso de selenium a Firefox puesto que es el que menos fallos me da a la hora de migrar el proyecto.
 '''
-from selenium import webdriver
-import pandas as pd
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 import time
 import threading
-from selenium.webdriver.chrome import service
 import socket
-from selenium.webdriver.common import desired_capabilities
-from selenium.webdriver.opera import options
-import os
-from selenium.webdriver.common.proxy import *
-from scipy import integrate
-from pickle import FALSE
-from numpy.matlib import rand
-import random
-import time
 from pathlib import Path
 import sys
-import pathlib
-import urllib
-import requests
-import shutil
-import shutil
-import winsound
-import urllib.request
-from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
+import os
+
+import Dumbledore
+import jackSparrow
+import Erebor
+
 #Variables globales
 ################################################################################################################
-#Consigo algunos parámetros para mostrar el nombre del dispositivo, calcular el tiempo que tarda el programa en funcionar y demás.
-host_name = socket.gethostname()
-host_ip = socket.gethostbyname(host_name)
-start_time = time.time()
-frequency = 880  # Set Frequency To 880 Hertz
-duration = 2000  # Set Duration To 1000 ms == 1 second
-
-
-#Cambiar a true y modificar los valores si se va a trabajar con proxy
-WithProxy=False # WithProxy = 1;
-myProxy = None # "http://149.215.113.110:70"
-proxy = Proxy({
-    'proxyType': ProxyType.MANUAL,
-    'httpProxy': myProxy,
-    'ftpProxy': myProxy,
-    'sslProxy': myProxy,
-    'noProxy':''})
-
-debug = True #Esto hace que vayan mostrandose los mensajes por el terminal, cambiar a False si se quiere
-tiempoEspera = 5
-sleepTime = 2 # mas rand de 2 segundos
-tiempoEsperaInicial = 100000
-
-home = str(Path.home())
-#print("Ruta home : ", home)
-rutaGuardado = r"C:\selenium"
-##RELLENAR AQUI el enlace y el nombre del fichero
-nombreArchivo = "default"
-url_Prueba_Busqueda = "default"
+hostName = socket.gethostname()
+hostIP = socket.gethostbyname(hostName)
+startTime = time.time()
+homePath = str(Path.home())
+savePath = os.path.dirname(os.path.realpath(__file__))# r"C:\selenium"
+dataFileName = ""
+URLText = ""
+prefix=''
 ################################################################################################################
+#Funciones
+def saveConfig(URL):
+    print("La ruta donde se guardará la carpeta de la extracción será : ",savePath)
+    print("Ahora establezca el nombre de esta carpeta en la que se guardarán los datos : ")
+    dataFileName =input()
+    saveDir = savePath + "\Extraccion_"+ whatPrefix(URL)+'_' + dataFileName
+    createDir(saveDir)
+    print("Los datos se guardarán en ", saveDir)
+    return saveDir, dataFileName
 
-#definicion de funciones
+def createDir(Path):
+    try:
+      os.stat(Path)
+    except:
+        try:  
+          os.mkdir(Path)
+        except:
+          print("No he podido crear el directorio, sigo usando ", saveDir)
+
+def whatPrefix(URL):
+    if   URLText.find("www.idealista") != -1:
+        prefix = 'ideal'
+    elif URLText.find("www.fotocasa") != -1:
+        prefix = 'foto'
+    elif URLText.find("www.pisos") != -1:
+        prefix = 'pisos'
+    return prefix
 ################################################################################################################
-#Esta es la función principal de IDEALISTA
-def extractLinksFotocasa(urlSearch):
-    #INICIO FIREFOX
-    #########################################################################################
-    prefix = "MF_" #Para saber desde qu� hebra ejecuto cada cosa uso siempre el prefijo del navegador antes de mostrar un mensaje
-    print(prefix,'Iniciando Firefox')
-    caps = DesiredCapabilities().FIREFOX
-    caps["pageLoadStrategy"] = "normal"
-    profile = webdriver.FirefoxProfile()
-    profile.set_preference('javascript.enabled', True)
-    options = webdriver.FirefoxOptions()
-    options.add_argument("--enable-javascript")
-    options.add_argument("user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36")
-
-    
-    profile.update_preferences()
-    if WithProxy==1 :
-        driver = webdriver.Firefox(desired_capabilities=caps,  proxy=proxy, firefox_profile=profile, options=options)
-    if WithProxy == 0 :
-        driver = webdriver.Firefox(desired_capabilities=caps, firefox_profile=profile, options=options)#executable_path='/your/path/to/geckodriver'
-    wait = WebDriverWait(driver,tiempoEspera)
-    waitLong = WebDriverWait(driver,tiempoEsperaInicial)
-    
-    driver.maximize_window()
-    ###########################################################################################
-    sleepRand()
-    driver.get(urlSearch)
-    waitLong.until(EC.url_contains(url_Prueba_Busqueda))
-    sleepRand()
-    sleepRand()
-    try:
-        wait.until(EC.presence_of_element_located((By.XPATH,"//h1[text()='Pardon Our Interruption...']")))
-        print("Ey! un capcha!")
-        winsound.Beep(frequency, duration)
-        waitLong.until(EC.presence_of_element_located((By.CSS_SELECTOR,".sui-AtomButton--primary")))
-        print("Capcha pasado, amos q nos vamos")
-    except:
-        print("No veo capcha...")  
-    try:
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,".sui-AtomButton--primary"))).click()
-        sleepRand()
-    except:
-        print("No he podido hacer click en la cookies...")
-    sleepRand()
-    StringNumObjects = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,".re-SearchTitle-count"))).text
-    NumObjects = int(StringNumObjects)
-    print("Hay ", NumObjects, " resultados")
-    pages = NumObjects/31;
-    print("Hay ",pages, " paginas aproximadamente...")
-    page = 0
-    linkActual = 0
-    df = pd.DataFrame(columns = ['Link', 'Título','Precio', 'metros cuadrados','Planta','Referencia del portal', 'Inmobiliaria', 'número de fotos','Orientación','Tipo de anuncio', 'Descripción del anuncio'])          
-    numPthotos = []
-    numPthotos.clear()
-    exit = NumObjects;
-    while exit > 0:
-        page = page+1
-        print("Extrayendo : pagina ", page, " de ", pages)
-        print("Quedan ", exit, " links aún");
-        goDownPageLoadingAll(wait)
-
-        try:
-                wait.until(EC.presence_of_element_located((By.XPATH,"//div[@class='re-Searchresult-itemRow']//div[@class='re-Card-secondary']/a[@class='re-Card-link']")))
-                houses = driver.find_elements_by_xpath("//div[@class='re-Searchresult-itemRow']//div[@class='re-Card-secondary']/a[@class='re-Card-link']")
-                numPhotograph=driver.find_elements_by_xpath("//div[@class='re-Searchresult-itemRow']/div/div[@class='re-Card-primary']/a/div[@class='re-Card-photosCounter']/span")
-                print("Numero de fotos extraidos : ", len(numPhotograph))
-        except:
-                print("error extrayendo links... intento otra vez")
-                time.sleep(sleepTime*2)
-                try:
-                    wait.until(EC.presence_of_element_located((By.XPATH,"//div[@class='re-Searchresult-itemRow']//div[@class='re-Card-secondary']/a[@class='re-Card-link']")))
-                    houses = driver.find_elements_by_xpath("//div[@class='re-Searchresult-itemRow']//div[@class='re-Card-secondary']/a[@class='re-Card-link']")
-                    numPhotograph=driver.find_elements_by_xpath("//div[@class='re-Searchresult-itemRow']/div/div[@class='re-Card-primary']/a/div[@class='re-Card-photosCounter']/span")
-                    print("Links extraidos")
-                except:
-                    print("ERROR : No encuentro los links...")                
-        links = []
-        links.clear()
-        
-        for i in houses:
-            try:
-                links.append(i.get_attribute('href'))
-                #print("Extraido el link :", i.get_attribute('href'))
-            except:
-                print(prefix , 'EEROR : Link ERROR')
-        print("Extraidos ", len(links), " links")
-        
-        exit=exit-len(links)
-        
-        for i in numPhotograph:
-            try:
-                photosDef = i.text.replace('1/', '')
-                numPthotos.append(photosDef)
-                print("Extraido el número de fotos :", photosDef)
-            except:
-                print(prefix , 'EEROR : numFotos ERROR')
-        if(len(numPthotos)==0):
-            print("Algo raro pasa")
-            sleepRand()
-            try:
-                numPhotograph=driver.find_elements_by_xpath("//div[@class='re-Searchresult-itemRow']/div/div[@class='re-Card-primary']/a/div[@class='re-Card-multimediaCounter']/div[@class='re-Card-photosCounter']/span[last()]")
-                for i in numPhotograph:
-                    try:
-                        photosDef = i.text.replace('1/', '')
-                        numPthotos.append(photosDef)
-                        print("Extraido el número de fotos :", photosDef)
-                    except:
-                        printt(prefix , 'EEROR : numFotos ERROR')
-            except:
-                print("Raro rarísimo con las fotitos de los huevos")
-
-        
-        for x in links:
-            print("Extrayendo página ", linkActual, " de un total de ", NumObjects)
-            printElapsedTieme(start_time)
-            linkActual = linkActual+1
-            
-            sleepRand()
-            
-            driver.get(x)
-            try:
-                wait.until(EC.presence_of_element_located((By.XPATH,"//h1[text()='Pardon Our Interruption...']")))
-                print("Ey! un capcha!")
-                winsound.Beep(frequency, duration)
-                waitLong.until(EC.presence_of_element_located((By.CSS_SELECTOR,".sui-AtomButton--primary")))
-                print("Capcha pasado, amos q nos vamos")
-            except:
-                print("No veo capcha...")     
-                
-            #EXTRAIGO LOS DATOS
-            if(debug==True): print(x)
-            v_titleHouse = fotocasaGetTitle(wait)
-            if(debug==True): print(v_titleHouse)
-            v_priceHouse = fotocasaGetPrice(wait)
-            if(debug==True): print(v_priceHouse, " �")
-            v_areaHouse = fotocasaGetArea(wait)
-            if(debug==True): print(v_areaHouse, " m^2")
-            v_reference = fotocasaGetReference(wait, driver)
-            if(debug==True): print(v_reference)
-            v_seller = fotocasaGetSeller(wait, driver)
-            if(debug==True): print(v_seller)
-            v_orientation = fotocasaGetOrientation(wait)
-            if(debug==True): print("Orientación : ",v_orientation)       
-            try:
-                if(debug==True): print('Número de fotos :', numPthotos[linkActual-1])
-            except:
-                numPthotos.append('ERROR')
-            v_houseType = fotocasaGetHouseType(wait, driver)
-            if(debug==True): print("Tipo de oferta : ",v_houseType)
-            if(v_houseType == 'Piso'):
-                v_floor = fotocasaGetFloor(wait)
-                if(debug==True): print(v_floor)
-            elif(v_houseType == 'Apartamento'):
-                v_floor = fotocasaGetFloor(wait)
-                if(debug==True): print(v_floor)
-            else:
-                v_floor = 'No es un piso ni un apartamento'
-                
-            fotocasaGetPhotography(wait,linkActual)
-            v_comment = fotocasaGetComment(wait)
-            
-            df.loc[len(df)] = [x,v_titleHouse,v_priceHouse ,v_areaHouse,v_floor, v_reference,v_seller, numPthotos[linkActual-1],v_orientation, v_houseType, v_comment]
-            
-        print("Amos a hacer click en siguiente")
-        driver.get(urlSearch)
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-        sleepRand()
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-        sleepRand()
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-        fotocasaClickNextPage(wait,waitLong,driver)
-        sleepRand()
-        try:
-            wait.until(EC.presence_of_element_located((By.XPATH,"//h1[text()='Pardon Our Interruption...']")))
-            print("Ey! un capcha!")
-            winsound.Beep(frequency, duration)
-            waitLong.until(EC.presence_of_element_located((By.CSS_SELECTOR,".sui-AtomButton--primary")))
-            print("Capcha pasado, amos q nos vamos")
-        except:
-            print("No veo capcha...") 
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-        urlSearch = driver.current_url
-        
-    driver.close()    
-    print("Extraidos ", pages, " links")
-    #TODOS LOS DATOS EXTRAIDOS
-    #############
-    
-    print(prefix,'Iniciando : Copia de datos al excel')
-    frames = [df]
-    df_copy = pd.concat(frames, axis=0, join='outer', ignore_index=True,
-              keys=None, levels=None, names=None, verify_integrity=False,
-              copy=True)
-    df_copy.to_csv(rutaGuardado + "\datos_"+nombreArchivo+'.csv', encoding='utf-8', index=False)
-    
-    print(prefix,'Finalizado : Copia de datos al excel')
-    print("Los datos est�n en ", home, "\Desktop\datos_", nombreArchivo, ".csv")
-    printElapsedTieme(start_time)
-    
-def goDownPageLoadingAll(wait):
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-    sleepRand()
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-    sleepRand()
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-    sleepRand()
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-    sleepRand()
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-    sleepRand()
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-    sleepRand()
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-    sleepRand()
-           
-def sleepRand():
-    timeDelay = sleepTime + random.randrange(0, 3)
-    time.sleep(timeDelay)  
-  
-def sleepRandLong():
-    timeDelay = sleepTime*25 + random.randrange(0, 5)
-    time.sleep(timeDelay) 
-
-def fotocasaClickNextPage(wait, waitLong, driver):
-    
-    try:
-        nextButton = wait.until(EC.presence_of_element_located((By.XPATH,"//ul[@class='sui-PaginationBasic-list']/li[last()]/a")))
-        driver.get(nextButton.get_attribute('href'))
-        print("Click en siguiente exitoso")
-    except:
-        print("ERROR haciendo click en siguiente")
-      
-def printElapsedTieme(started_time):
-    temp = time.time() - started_time
-    hours = temp//3600
-    temp = temp - 3600*hours
-    minutes = temp//60
-    seconds = temp - 60*minutes
-    print('Tiempo transcurrido')
-    print('%d:%d:%d' %(hours,minutes,seconds))
-    
-
-############################################
-# Estas funciones consiguen cada uno de los atributos de la página. 
-
-def fotocasaGetHouseType(wait, driver):
-    try:
-        v_housetype = wait.until(EC.presence_of_element_located((By.XPATH,"//div[@class='re-DetailFeaturesList-featureContent']/p[@class='re-DetailFeaturesList-featureLabel' and contains(text(), 'Tipo de inmueble')]/../p[@class='re-DetailFeaturesList-featureValue']"))).text
-    except :
-        try:
-            v_housetype = wait.until(EC.presence_of_element_located((By.XPATH,"//div[@class='re-DetailFeaturesList-featureContent']/p[@class='re-DetailFeaturesList-featureLabel' and contains(text(), 'Tipo de inmueble')]/../p[@class='re-DetailFeaturesList-featureValue']"))).text
-        except:
-            print('ERROR : Obteniendo el tipo de oferta')
-            v_housetype = 'ERROR'
-    return v_housetype
-
-def fotocasaGetFloor(wait):
-    try:
-        v_floor = wait.until(EC.presence_of_element_located((By.XPATH,"//div[@class='re-DetailFeaturesList-featureContent']/p[@class='re-DetailFeaturesList-featureLabel' and contains(text(), 'Planta')]/../p[@class='re-DetailFeaturesList-featureValue']"))).text
-    except :
-        try:
-            v_floor = wait.until(EC.presence_of_element_located((By.XPATH,"//div[@class='re-DetailFeaturesList-featureContent']/p[@class='re-DetailFeaturesList-featureLabel' and contains(text(), 'Planta')]/../p[@class='re-DetailFeaturesList-featureValue']"))).text
-        except:
-            print('ERROR : Obteniendo la planta')
-            v_floor = 'ERROR'
-    return v_floor
-      
-def fotocasaGetTitle(wait):
-    try:
-        v_houseTitle = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,"h1.re-DetailHeader-propertyTitle"))).text
-    except :
-        try:
-            v_houseTitle = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,"h1.re-DetailHeader-propertyTitle"))).text
-        except:
-            print('ERROR : Obteniendo el título')
-            v_houseTitle = 'ERROR'
-    return v_houseTitle
-
-def fotocasaGetPrice(wait):
-    try:
-        v_housePrice = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,"span.re-DetailHeader-price"))).text
-    except :
-        try:
-            v_housePrice = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,"span.re-DetailHeader-price"))).text
-        except:
-            print('ERROR : Obteniendo el precio')
-            v_housePrice = 'ERROR'
-    return v_housePrice
-
-def fotocasaGetOrientation(wait):
-    try:
-        v_orientation = wait.until(EC.presence_of_element_located((By.XPATH,"//div[@class='re-DetailFeaturesList-featureContent']/p[@class='re-DetailFeaturesList-featureLabel' and contains(text(), 'Orientación')]/../p[@class='re-DetailFeaturesList-featureValue']"))).text
-    except :
-        try:
-            v_orientation = wait.until(EC.presence_of_element_located((By.XPATH,"//div[@class='re-DetailFeaturesList-featureContent']/p[@class='re-DetailFeaturesList-featureLabel' and contains(text(), 'Orientación')]/../p[@class='re-DetailFeaturesList-featureValue']"))).text
-        except:
-            print('ERROR : Obteniendo la orientación')
-            v_orientation = 'ERROR'
-    return v_orientation
-
-def fotocasaGetArea(wait):
-    try:
-        v_houseArea = wait.until(EC.presence_of_element_located((By.XPATH,"//ul[@class='re-DetailHeader-features']//span[text()=' m²']/span[@class='re-DetailHeader-featuresItemValue']"))).text
-    except :
-        try:
-            v_houseArea = wait.until(EC.presence_of_element_located((By.XPATH,"//ul[@class='re-DetailHeader-features']//span[text()=' m²']/span[@class='re-DetailHeader-featuresItemValue']"))).text
-        except:
-            print('ERROR : Obteniendo el area')
-            v_houseArea = 'ERROR'
-    return v_houseArea
-
-def fotocasaGetPhotography(wait, numImage):
-    try:
-        img =  wait.until(EC.presence_of_element_located((By.XPATH,"//div[@class='re-DetailSlider']//div/ul/li[1]/div[@class='re-DetailMultimediaImage-container re-DetailMultimediaImage-container--withHorizontalBorder']/img")))
-        #print("Imagen obtenida")
-    except :
-        try:
-            img =  wait.until(EC.presence_of_element_located((By.XPATH,"//div[@class='re-DetailSlider']//div/ul/li[1]/div[@class='re-DetailMultimediaImage-container re-DetailMultimediaImage-container--withHorizontalBorder']/img")))
-            #print("Imagen obtenida")
-        except:
-            print('ERROR : Obteniendo la imagen')
-            img = 'ERROR'
-    try:
-        src = img.get_attribute('src')
-        print("Imagen src : ", src)
-        imageName = str(numImage) + "_" + nombreArchivo + r".jpg"
-        print("Nombre del archivo : ",imageName)
-        imageCompleteName = rutaGuardado+ "\img_" + imageName
-        print("Ruta del archivo :", imageCompleteName)
-        print("Nombre del archivo : ",imageName)
-        urllib.request.urlretrieve(src,imageCompleteName)
-        print("Imagen guardada")
-    except :
-        print("ERROR guardando la imagen ")
-    try:
-        name = img.get_attribute('title')
-        print("Nombre de la imagen web: ", name)
-    except OSError as err:
-        print("OS error: {0}".format(err))
-    except ImportError:
-        print("NO module found")
-    except ValueError:
-        print("Could not convert data to an integer.")
-    except:
-        print("ERROR con el nombre de la imagen")
-        name = 'ERROR ERROR'
-    return name
-
-def save_image_to_file(image, dirname, suffix):
-    with open('{dirname}/img_{suffix}.jpg'.format(dirname=dirname, suffix=suffix), 'wb') as out_file:
-        shutil.copyfileobj(image.raw, out_file)
-
-def fotocasaGetReference(wait, driver):
-    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_UP)
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_UP)
-    sleepRand()
-    try:
-        v_reference = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,"span.re-ContactDetail-referenceContainer-reference"))).text
-    except :
-        try:
-            v_reference = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,"span.re-ContactDetail-referenceContainer-reference"))).text
-        except:
-            print('ERROR : Obteniendo la referencia')
-            v_reference = 'ERROR'
-    driver.execute_script("window.scrollTo(0, 0);")
-    return v_reference
-
-def fotocasaGetSeller(wait, driver):
-    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_UP)
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_UP)
-    sleepRand()
-    try:
-        v_seller = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,"span.re-ContactDetail-inmoContainer-clientName"))).text
-    except :
-        try:
-            v_seller = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,".re-ContactDetail-inmoContainer-clientName"))).text
-        except:
-            print('ERROR : Obteniendo el vendedor')
-            v_seller = 'ERROR'
-    driver.execute_script("window.scrollTo(0, 0);")
-    return v_seller
-
-def fotocasaGetComment(wait):
-    try:
-        v_comment = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,".fc-DetailDescription"))).text
-    except :
-        try:
-            wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-            v_comment = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,".fc-DetailDescription"))).text
-        except:
-            print('ERROR : Obteniendo el comentario')
-            v_comment = 'ERROR'
-    return v_comment
-
-
-def extractLinksIdealista(urlSearch):
-    #INICIO FIREFOX
-    #########################################################################################
-    prefix = "MF_" #Para saber desde qué hebra ejecuto cada cosa uso siempre el prefijo del navegador antes de mostrar un mensaje
-    print(prefix,'Iniciando Firefox')
-    caps = DesiredCapabilities().FIREFOX
-    caps["pageLoadStrategy"] = "normal"
-    if WithProxy==1 :
-        driver = webdriver.Firefox(desired_capabilities=caps,  proxy=proxy)
-    if WithProxy == 0 :
-            driver = webdriver.Firefox(desired_capabilities=caps)#executable_path='/your/path/to/geckodriver'
-    wait = WebDriverWait(driver,tiempoEspera)
-    driver.maximize_window()
-    ###########################################################################################
-    driver.get(urlSearch)
-    sleepRand()
-    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-    StringNumObjects = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,"h1.listing-title"))).text
-    NumObjects = [int(Numero) for Numero in StringNumObjects.split() if Numero.isdigit()]
-    print("Hay ", NumObjects[0], " resultados")
-    pages = NumObjects[0]/30;
-    print("Hay ",pages, " páginas")
-    page = 0
-    linkActual = 0;
-    df = pd.DataFrame(columns = ['Link', 'Título','Precio', 'metros cuadrados','Num habitaciones', 'Piso', 'Referencia del portal','Inmoviliaria', 'Nº fotos','tipo de portada', 'Comentario'])
-    while page < pages:
-        print("Extrayendo : página ", page, " de ", pages)
-        page = page+1
-        
-        try:
-            wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,'.item_contains_branding')))
-            sleepRand()
-        except:
-            sleepRand()
-            print("ERROR : No encuentro el body")
-        try:
-                wait.until(EC.presence_of_element_located((By.XPATH,"//article/div[@class='item-info-container']/a")))
-                houses = driver.find_elements_by_xpath("//article/div[@class='item-info-container']/a")
-        except:
-                time.sleep(sleepTime*2)
-                try:
-                    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,"//article/div[@class='item-info-container']/a")))
-                    houses = driver.find_elements_by_xpath("//article/div[@class='item-info-container']/a")
-                except:
-                    print("ERROR : No encuentro los links...")
-        links = []
-        links.clear()
-        for i in houses:
-            try:
-                links.append(i.get_attribute('href'))
-            except:
-                print(prefix , 'EEROR : Link ERROR')
-        print("Extraidos ", len(links), " links")
-        
-        for x in links:
-            print("Extrayendo página ", linkActual, " de un total de ", NumObjects[0])
-            printElapsedTieme(start_time)
-            linkActual = linkActual+1
-            sleepRand()
-            driver.get(x)
-            
-            #Extraigo los datos
-            if(debug==True): print(x)
-            v_titleHouse = idealistaGetTitle(wait)
-            if(debug==True): print(v_titleHouse)
-            v_priceHouse = idealistaGetPrice(wait)
-            if(debug==True): print(v_priceHouse, " €")
-            v_areaHouse = idealistaGetArea(wait)
-            if(debug==True): print(v_areaHouse, " m^2")
-            v_NumRooms = idealistaGetNumRooms(wait)
-            if(debug==True): print(v_NumRooms, " habitaciones")
-            v_floor = idealistaGetFloor(wait)
-            if(debug==True): print(v_floor)
-            v_reference = idealistaGetReference(wait)
-            if(debug==True): print(v_reference)
-            v_numPhotos = idealistaGetNumberOfPhotos(wait)
-            if(debug==True): print(v_numPhotos)
-            v_seller = idealistaGetSeller(wait)
-            if(debug==True): print(v_seller)
-            v_comment = idealistaGetComment(wait)
-            photoName = idealistaGetPhotography(wait,linkActual )
-            photoText = photoName.split(' ')
-            if(photoText[1] == "de"): photoText[1]=photoText[2]
-            print("Palabra clave de la imagen : ", photoText[1])
-            #if(debug==True): print(v_comment)   
-            #['Link', 'Título','Precio', 'metros cuadrados','Piso', 'Referencia del portal','Inmoviliaria', 'Nº fotos'])
-            df.loc[len(df)] = [x,v_titleHouse,v_priceHouse ,v_areaHouse,v_NumRooms, v_floor,v_reference,v_seller, v_numPhotos, photoText[1], v_comment]
-        
-        driver.get(urlSearch)
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-        sleepRand()
-        print("Click en siguiente")
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-        sleepRand()
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-        idealistaClickNextPage(wait)
-        urlSearch = driver.current_url
-        
-    driver.close()    
-    print("Extraidos ", pages, " links")
-    #Datos extraidos
-    #############
-    print(prefix,'Iniciando : Copia de datos al excel')
-    frames = [df]
-    df_copy = pd.concat(frames, axis=0, join='outer', ignore_index=True,
-              keys=None, levels=None, names=None, verify_integrity=False,
-              copy=True)
-
-    
-    df_copy.to_csv(rutaGuardado + "\datos_"+nombreArchivo+'.csv', encoding='utf-8', index=False)
-    print(prefix,'Finalizado : Copia de datos al excel')
-    print("Los datos están en ", home, "\Desktop\datos_", nombreArchivo, ".csv")
-    printElapsedTieme(start_time)
-            
-def  idealistaClickNextPage(wait):
-    try:
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,".icon-arrow-right-after > span"))).click()
-    except:
-        print("Error haciendo click en siguiente")
-      
-def idealistaGetTitle(wait):
-    try:
-        v_houseTitle = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,"div.main-info__title h1.h2-simulated span.main-info__title-main"))).text
-    except :
-        try:
-            v_houseTitle = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,"div.main-info__title h1.h2-simulated span.main-info__title-main"))).text
-        except:
-            print('ERROR : Obteniendo el título')
-            v_houseTitle = 'ERROR'
-    return v_houseTitle
-
-def idealistaGetPrice(wait):
-    try:
-        v_housePrice = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,"span.info-data-price span.txt-bold"))).text
-    except :
-        try:
-            v_housePrice = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,"span.info-data-price span.txt-bold"))).text
-        except:
-            print('ERROR : Obteniendo el precio')
-            v_housePrice = 'ERROR'
-    return v_housePrice
-
-def idealistaGetArea(wait):
-    try:
-        v_houseArea = wait.until(EC.presence_of_element_located((By.XPATH,"//div[@class='info-features']/span[1]/span"))).text
-    except :
-        try:
-            v_houseArea = wait.until(EC.presence_of_element_located((By.XPATH,"//div[@class='info-features']/span[1]/span"))).text
-        except:
-            print('ERROR : Obteniendo el area')
-            v_houseArea = 'ERROR'
-    return v_houseArea
-
-def idealistaGetNumRooms(wait):
-    try:
-        v_numberRooms = wait.until(EC.presence_of_element_located((By.XPATH,"//div[@class='info-features']/span[2]/span"))).text
-    except :
-        try:
-            v_numberRooms = wait.until(EC.presence_of_element_located((By.XPATH,"//div[@class='info-features']/span[2]/span"))).text
-        except:
-            print('ERROR : Obteniendo el número de habitaciones')
-            v_numberRooms = 'ERROR'
-    return v_numberRooms
-
-def idealistaGetPhotography(wait, numImage):
-    try:
-        img =  wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,"div.main-image_first img")))
-        #print("Imagen obtenida")
-    except :
-        try:
-            img =  wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,"div.main-image_first img")))
-            #print("Imagen obtenida")
-        except:
-            print('ERROR : Obteniendo la imagen')
-            img = 'ERROR'
-    try:
-        src = img.get_attribute('src')
-        print("Imagen src : ", src)
-        imageName = str(numImage) + "_" + nombreArchivo + r".jpg"
-        print("Nombre del archivo : ",imageName)
-        imageCompleteName = rutaGuardado+ "\img_" + imageName
-        print("Ruta del archivo :", imageCompleteName)
-        print("Nombre del archivo : ",imageName)
-        urllib.request.urlretrieve(src,imageCompleteName)
-        print("Imagen guardada")
-    except :
-        print("Error guardando la imagen ")
-    try:
-        name = img.get_attribute('title')
-        print("Nombre de la imagen web: ", name)
-    except OSError as err:
-        print("OS error: {0}".format(err))
-    except ImportError:
-        print("NO module found")
-    except ValueError:
-        print("Could not convert data to an integer.")
-    except:
-        print("ERROR con el nombre de la imagen")
-        name = 'ERROR ERROR'
-    return name
-
-def idealistaGetFloor(wait):
-    try:
-        v_floor = wait.until(EC.presence_of_element_located((By.XPATH,"//div[@class='info-features']/span[3]/span"))).text
-    except :
-        try:
-            v_floor = wait.until(EC.presence_of_element_located((By.XPATH,"//div[@class='info-features']/span[3]/span"))).text
-        except:
-            print('ERROR : Obteniendo la planta')
-            v_floor = 'ERROR'
-    return v_floor
-
-def idealistaGetReference(wait):
-    try:
-        v_reference = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,".txt-ref"))).text
-    except :
-        try:
-            v_reference = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,".txt-ref"))).text
-        except:
-            print('ERROR : Obteniendo la referencia')
-            v_reference = 'ERROR'
-    return v_reference
-
-def idealistaGetNumberOfPhotos(wait):
-    try:
-        v_NumPhotos = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,".btn.fa-button.icon-no-pics.with-text > .fa-button-text"))).text
-    except :
-        try:
-            v_NumPhotos = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,".btn.fa-button.icon-no-pics.with-text > .fa-button-text"))).text
-        except:
-            print('ERROR : Obteniendo el numero de fotos')
-            v_NumPhotos = 'ERROR'
-    return v_NumPhotos
-
-def idealistaGetSeller(wait):
-    try:
-        v_seller = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,".about-advertiser-name"))).text
-    except :
-        try:
-            v_seller = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,".about-advertiser-name"))).text
-        except:
-            print('ERROR : Obteniendo el vendedor')
-            v_seller = 'ERROR'
-    return v_seller
-
-def idealistaGetComment(wait):
-    try:
-        v_comment = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,".comment"))).text
-    except :
-        try:
-            wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-            wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-            v_comment = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,".comment"))).text
-        except:
-            print('ERROR : Obteniendo el comentario')
-            v_comment = 'ERROR'
-    return v_comment
-
-
-print('Iniciando...')
 #mainCode
+#Input
+print('Iniciando...')
+#print("IP local del dispositivo : ",hostIP)
+if len(sys.argv) == 2: #python.py + link
+    URLText = sys.argv[1]
+    savePath, dataFileName=saveConfig(URLText)    
+elif len(sys.argv) == 3: #python.py + link + fileName
+    URLText = sys.argv[1]
+    savePath = savePath + "\Extraccion_"+ whatPrefix(URLText) +'_'+ sys.argv[2]
+    createDir(savePath)
+    dataFileName=sys.argv[2]
+elif len(sys.argv) < 2: #python.py, input by keyboard
+    while(URLText.find("www.idealista") == -1 and URLText.find("www.fotocasa") == -1 and URLText.find("www.pisos") == -1):
+        URLText = input("Introduzca la url de IDEALISTA, FOTOCASA o PISOS para realizar la extracción : \n")
+        if(URLText.find("www.idealista") == -1 and URLText.find("www.fotocasa") == -1 and URLText.find("www.pisos") == -1):
+            print("Link no valido, prueba otra vez")
+    savePath, dataFileName=saveConfig(URLText)
 ################################################################################################################
-
-#print("IP local del dispositivo : ",host_ip)
-if __name__ == "__main__":
-    if len(sys.argv) == 2:
-        url_Prueba_Busqueda = sys.argv[1]
-    elif len(sys.argv) == 3:
-        url_Prueba_Busqueda = sys.argv[1]
-        nombreArchivo = sys.argv[2]
-    elif len(sys.argv) < 2:
-        while(url_Prueba_Busqueda.find("www.idealista") == -1 and url_Prueba_Busqueda.find("www.fotocasa") == -1):
-            url_Prueba_Busqueda = input("Introduzca la url de IDEALISTA o FOTOCASA para realizar la extracción : ")
-            if(url_Prueba_Busqueda.find("www.idealista") == -1 and url_Prueba_Busqueda.find("www.fotocasa") == -1):
-                print("link no valido, prueba otra vez")
-        print("Ahora introduzca el nombre que se le va a poner a los archivos que se guardarán en la carpeta",rutaGuardado)
-        nombreArchivo =input()
-    
-    if(url_Prueba_Busqueda.find("www.fotocasa") != -1):
-        print("Iniciando extracción de datos para fotocasa,")
-        FirefoxThread = threading.Thread(target=extractLinksFotocasa(url_Prueba_Busqueda))
-    elif(url_Prueba_Busqueda.find("www.idealista") != -1):
-        print("Iniciando extracción de datos para idealista,")
-        FirefoxThread = threading.Thread(target=extractLinksIdealista(url_Prueba_Busqueda))
-    FirefoxThread.start()
-    FirefoxThread.join()        
+#Start the browser
+if(URLText.find("www.fotocasa") != -1):
+    print("Iniciando extracción de datos para fotocasa.com")
+    FirefoxThread = threading.Thread(target=Dumbledore.extractLinksFotocasa(URLText, startTime, savePath, dataFileName))
+elif(URLText.find("www.idealista") != -1):
+    print("Iniciando extracción de datos para idealista.com")
+    FirefoxThread = threading.Thread(target=jackSparrow.extractLinksIdealista(URLText, startTime, savePath, dataFileName))
+elif(URLText.find("www.pisos") != -1):
+    print("Iniciando extracción de datos para pisos.com")
+    FirefoxThread = threading.Thread(target=Erebor.extractLinksPisos(URLText, startTime, savePath, dataFileName))
+FirefoxThread.start()
+FirefoxThread.join()
 print('Fin del programa principal.')
 ################################################################################################################
