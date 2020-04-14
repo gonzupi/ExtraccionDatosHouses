@@ -37,7 +37,6 @@ import shutil
 import shutil
 import winsound
 import urllib.request
-
 ################################################################################################################
 frequency = 880  # Set Frequency To 880 Hertz
 duration = 2000  # Set Duration To 1000 ms == 1 second
@@ -56,7 +55,6 @@ tiempoEspera = 5
 tiempoEsperaInicial = 100000
 sleepTime = 2 # mas rand de 2 segundos
 ################################################################################################################
-
 def extractLinksIdealista(url_text, start_time, rutaGuardado, nombreArchivo):
     #INICIO FIREFOX
     #########################################################################################
@@ -86,7 +84,6 @@ def extractLinksIdealista(url_text, start_time, rutaGuardado, nombreArchivo):
     while page < pages:
         print("Extrayendo : página ", page, " de ", pages)
         page = page+1
-
         try:
             wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,'.item_contains_branding')))
             sleepRand()
@@ -111,14 +108,12 @@ def extractLinksIdealista(url_text, start_time, rutaGuardado, nombreArchivo):
             except:
                 print(prefix , 'EEROR : Link ERROR')
         print("Extraidos ", len(links), " links")
-
         for x in links:
             print("Extrayendo página ", linkActual, " de un total de ", NumObjects[0])
             printElapsedTieme(start_time)
             linkActual = linkActual+1
             sleepRand()
             driver.get(x)
-
             #Extraigo los datos
             if(debug==True): print(x)
             v_titleHouse = getTitle(wait)
@@ -145,7 +140,6 @@ def extractLinksIdealista(url_text, start_time, rutaGuardado, nombreArchivo):
             #if(debug==True): print(v_comment)
             #['Link', 'Título','Precio', 'metros cuadrados','Piso', 'Referencia del portal','Inmoviliaria', 'Nº fotos'])
             df.loc[len(df)] = [x,v_titleHouse,v_priceHouse ,v_areaHouse,v_NumRooms, v_floor,v_reference,v_seller, v_numPhotos, photoText[1], v_comment]
-
         driver.get(url_text)
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
@@ -161,7 +155,6 @@ def extractLinksIdealista(url_text, start_time, rutaGuardado, nombreArchivo):
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
         clickNextPage(wait)
         url_text = driver.current_url
-
     driver.close()
     print("Extraidos ", pages, " links")
     #Datos extraidos
@@ -171,8 +164,6 @@ def extractLinksIdealista(url_text, start_time, rutaGuardado, nombreArchivo):
     df_copy = pd.concat(frames, axis=0, join='outer', ignore_index=True,
               keys=None, levels=None, names=None, verify_integrity=False,
               copy=True)
-
-
     df_copy.to_csv(rutaGuardado + "\datos_"+nombreArchivo+'.csv', encoding='utf-8', index=False)
     print(prefix,'Finalizado : Copia de datos al excel')
     print("Los datos están en ", home, "\Desktop\datos_", nombreArchivo, ".csv")

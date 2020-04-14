@@ -148,7 +148,7 @@ def extractLinksPisos(url_text, start_time,rutaGuardado, nombreArchivo ):
         df.loc[len(df)] = [linkHouse,v_titleHouse,v_priceHouse ,v_areaHouse,v_orientacion,v_floor, v_reference,v_seller, numPthotos, v_houseType, v_comment]
         '''
         print("Vamos a hacer click en siguiente")
-        linkHouse = ClickNextPage(wait,waitLong,driver)
+        linkHouse = ClickNextPageRight(wait,waitLong,driver)
         sleepRand()
         exit = exit-1
     
@@ -163,7 +163,7 @@ def extractLinksPisos(url_text, start_time,rutaGuardado, nombreArchivo ):
               copy=True)
     df_copy.to_csv(rutaGuardado + "\datos_"+nombreArchivo+'.csv', encoding='utf-8', index=False)
     print(prefix,'Finalizado : Copia de datos al excel')
-    print("Los datos estan en ", home, "\Desktop\datos_", nombreArchivo, ".csv")
+    print("Los datos estan en ",rutaGuardado)
     printElapsedTieme(start_time)
 
 def sleepRand():
@@ -182,7 +182,19 @@ def ClickNextPage(wait, waitLong, driver):
         return nextLink
     except:
         print("ERROR haciendo click en siguiente")
-
+        
+def ClickNextPageRight(wait, waitLong, driver):
+    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
+    sleepRand()
+    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
+    sleepRand()
+    try:
+        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.ARROW_RIGHT)
+        nextLink=driver.current_url
+        print("Click en siguiente exitoso")
+        return nextLink
+    except:
+        print("ERROR haciendo click en siguiente")
 def printElapsedTieme(started_time):
     temp = time.time() - started_time
     hours = temp//3600
@@ -232,7 +244,9 @@ def getPrice(wait):
 
 def getOrientation(wait):
     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
+    sleepRand()
     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
+    sleepRand()
     try:
         v_orientation = wait.until(EC.presence_of_element_located((By.XPATH,"//span[contains(text(),'Orientación')]/../span[last()]"))).text
         v_orientation=v_orientation.replace(": ", "")
@@ -240,7 +254,9 @@ def getOrientation(wait):
         print('ERROR : Obteniendo la orientación')
         v_orientation = 'ERROR'
     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_UP)
+    sleepRand()
     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_UP)
+    sleepRand()
     return v_orientation
 
 def getArea(wait):
@@ -309,7 +325,9 @@ def getNumberOfPhotos(wait):
 
 def getReference(wait, driver):
     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
+    sleepRand()
     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
+    sleepRand()
     try:
         v_reference = wait.until(EC.presence_of_element_located((By.XPATH,"//span[@class='icon icon-inline icon-referencia']/../span[2]"))).text
         v_reference=v_reference.replace(": ", "")
@@ -318,11 +336,14 @@ def getReference(wait, driver):
         print('ERROR : Obteniendo la referencia')
         v_reference = 'ERROR'
     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_UP)
+    sleepRand()
     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_UP)
+    sleepRand()
     return v_reference
 
 def getSeller(wait, driver):
     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
+    sleepRand()
     try:
         v_seller = wait.until(EC.presence_of_element_located((By.XPATH,"//div[@class='owner-data']//div[@class='owner-data-info']/a"))).text
     except :
@@ -332,11 +353,14 @@ def getSeller(wait, driver):
             print('ERROR : Obteniendo el vendedor')
             v_seller = 'ERROR'
     driver.execute_script("window.scrollTo(0, 0);")
+    sleepRand()
     return v_seller
 
 def getComment(wait, driver):
     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
+    sleepRand()
     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
+    sleepRand()
     try:
         wait.until(EC.presence_of_element_located((By.XPATH, "//div[@id='description' and @class='description']/a[@class='show-more']"))).click()
         v_comment = wait.until(EC.presence_of_element_located((By.XPATH, "//div[@id='descriptionBody']"))).text
@@ -348,4 +372,5 @@ def getComment(wait, driver):
             print('ERROR : Obteniendo el comentario')
             v_comment = 'ERROR'
     driver.execute_script("window.scrollTo(0, 0);")
+    sleepRand()
     return v_comment

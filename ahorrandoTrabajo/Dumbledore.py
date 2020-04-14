@@ -58,7 +58,7 @@ tiempoEsperaInicial = 100000
 sleepTime = 2 # mas rand de 2 segundos
 ################################################################################################################
 
-#Esta es la función principal de IDEALISTA
+#Esta es la función de extracción para IDEALISTA
 def extractLinksFotocasa(url_text, start_time,rutaGuardado, nombreArchivo ):
     #INICIO FIREFOX
     #########################################################################################
@@ -139,7 +139,6 @@ def extractLinksFotocasa(url_text, start_time,rutaGuardado, nombreArchivo ):
             except:
                 print(prefix , 'EEROR : Link ERROR')
         print("Extraidos ", len(links), " links")
-
         exit=exit-len(links)
         for i in numPhotograph:
             try:
@@ -166,9 +165,7 @@ def extractLinksFotocasa(url_text, start_time,rutaGuardado, nombreArchivo ):
             print("Extrayendo página ", linkActual, " de un total de ", NumObjects)
             printElapsedTieme(start_time)
             linkActual = linkActual+1
-
             sleepRand()
-
             driver.get(x)
             try:
                 wait.until(EC.presence_of_element_located((By.XPATH,"//h1[text()='Pardon Our Interruption...']")))
@@ -178,7 +175,6 @@ def extractLinksFotocasa(url_text, start_time,rutaGuardado, nombreArchivo ):
                 print("Capcha pasado, amos q nos vamos")
             except:
                 print("No veo capcha...")
-
             #EXTRAIGO LOS DATOS
             if(debug==True): print(x)
             v_titleHouse = getTitle(wait)
@@ -207,12 +203,9 @@ def extractLinksFotocasa(url_text, start_time,rutaGuardado, nombreArchivo ):
                 if(debug==True): print(v_floor)
             else:
                 v_floor = 'No es un piso ni un apartamento'
-
             getPhotography(wait,linkActual,nombreArchivo, rutaGuardado)
             v_comment = getComment(wait)
-
             df.loc[len(df)] = [x,v_titleHouse,v_priceHouse ,v_areaHouse,v_floor, v_reference,v_seller, numPthotos[linkActual-1],v_orientation, v_houseType, v_comment]
-
         print("Amos a hacer click en siguiente")
         driver.get(url_text)
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
@@ -239,7 +232,6 @@ def extractLinksFotocasa(url_text, start_time,rutaGuardado, nombreArchivo ):
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
         url_text = driver.current_url
-
     driver.close()
     print("Extraidos ", pages, " links")
     #TODOS LOS DATOS EXTRAIDOS

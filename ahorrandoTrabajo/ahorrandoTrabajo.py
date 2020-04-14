@@ -19,16 +19,15 @@ import Erebor
 
 #Variables globales
 ################################################################################################################
-#Consigo algunos parámetros para mostrar, calcular el tiempo que tarda el programa en funcionar y demás.
 host_name = socket.gethostname()
 host_ip = socket.gethostbyname(host_name)
 start_time = time.time()
 home = str(Path.home())
 rutaGuardado = os.path.dirname(os.path.realpath(__file__))# r"C:\selenium"
-################################################################################################################
 nombreArchivo = ""
 url_text = ""
-
+################################################################################################################
+#Funciones
 def saveConfig():
     print("La ruta donde se guardará la carpeta de la extracción será : ",rutaGuardado)
     print("Ahora establezca el nombre de esta carpeta en la que se guardarán los datos : ")
@@ -41,8 +40,8 @@ def saveConfig():
     print("Los datos se guardarán en ", directorio)
 
 ################################################################################################################
-print('Iniciando...')
 #mainCode
+print('Iniciando...')
 #print("IP local del dispositivo : ",host_ip)
 if len(sys.argv) == 2:
     url_text = sys.argv[1]
