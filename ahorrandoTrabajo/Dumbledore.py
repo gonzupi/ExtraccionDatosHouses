@@ -43,7 +43,7 @@ import urllib.request
 frequency = 880  # Set Frequency To 880 Hertz
 duration = 2000  # Set Duration To 1000 ms == 1 second
 #Cambiar a true y modificar los valores si se va a trabajar con proxy
-WithProxy=False # WithProxy = 1;
+withProxy=False # withProxy = 1;
 myProxy = None # "http://149.215.113.110:70"
 proxy = Proxy({
     'proxyType': ProxyType.MANUAL,
@@ -51,18 +51,17 @@ proxy = Proxy({
     'ftpProxy': myProxy,
     'sslProxy': myProxy,
     'noProxy':''})
-home = str(Path.home())
 debug = True #Esto hace que vayan mostrandose los mensajes por el terminal, cambiar a False si se quiere
-tiempoEspera = 5
-tiempoEsperaInicial = 100000
+waitTimeDefault = 5
+waitTimeLong = 100000
 sleepTime = 2 # mas rand de 2 segundos
 ################################################################################################################
 
 #Esta es la función de extracción para IDEALISTA
-def extractLinksFotocasa(url_text, start_time,rutaGuardado, nombreArchivo ):
+def extractLinksFotocasa(url_text, start_time,saveDir, dataFileName ):
     #INICIO FIREFOX
     #########################################################################################
-    prefix = "MF_" #Para saber desde qu� hebra ejecuto cada cosa uso siempre el prefijo del navegador antes de mostrar un mensaje
+    prefix = "MF_" #Para saber desde qu� hebra ejecuto cada cosa si uso varios navegadores uso siempre el prefijo del navegador antes de mostrar un mensaje
     print(prefix,'Iniciando Firefox')
     caps = DesiredCapabilities().FIREFOX
     caps["pageLoadStrategy"] = "normal"
@@ -72,12 +71,12 @@ def extractLinksFotocasa(url_text, start_time,rutaGuardado, nombreArchivo ):
     options.add_argument("--enable-javascript")
     options.add_argument("user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36")
     profile.update_preferences()
-    if WithProxy==1 :
+    if withProxy==1 :
         driver = webdriver.Firefox(desired_capabilities=caps,  proxy=proxy, firefox_profile=profile, options=options)
-    if WithProxy == 0 :
+    if withProxy == 0 :
         driver = webdriver.Firefox(desired_capabilities=caps, firefox_profile=profile, options=options)#executable_path='/your/path/to/geckodriver'
-    wait = WebDriverWait(driver,tiempoEspera)
-    waitLong = WebDriverWait(driver,tiempoEsperaInicial)
+    wait = WebDriverWait(driver,waitTimeDefault)
+    waitLong = WebDriverWait(driver,waitTimeLong)
     driver.maximize_window()
     ###########################################################################################
     sleepRand()
@@ -130,16 +129,16 @@ def extractLinksFotocasa(url_text, start_time,rutaGuardado, nombreArchivo ):
                     print("Links extraidos")
                 except:
                     print("ERROR : No encuentro los links...")
-        links = []
-        links.clear()
+        allLinks = []
+        allLinks.clear()
         for i in houses:
             try:
-                links.append(i.get_attribute('href'))
+                allLinks.append(i.get_attribute('href'))
                 #print("Extraido el link :", i.get_attribute('href'))
             except:
                 print(prefix , 'EEROR : Link ERROR')
-        print("Extraidos ", len(links), " links")
-        exit=exit-len(links)
+        print("Extraidos ", len(allLinks), " links")
+        exit=exit-len(allLinks)
         for i in numPhotograph:
             try:
                 photosDef = i.text.replace('1/', '')
@@ -161,12 +160,12 @@ def extractLinksFotocasa(url_text, start_time,rutaGuardado, nombreArchivo ):
                         printt(prefix , 'EEROR : numFotos ERROR')
             except:
                 print("Raro rarísimo con las fotitos de los huevos")
-        for x in links:
+        for link in allLinks:
             print("Extrayendo página ", linkActual, " de un total de ", NumObjects)
             printElapsedTieme(start_time)
             linkActual = linkActual+1
             sleepRand()
-            driver.get(x)
+            driver.get(link)
             try:
                 wait.until(EC.presence_of_element_located((By.XPATH,"//h1[text()='Pardon Our Interruption...']")))
                 print("Ey! un capcha!")
@@ -176,7 +175,7 @@ def extractLinksFotocasa(url_text, start_time,rutaGuardado, nombreArchivo ):
             except:
                 print("No veo capcha...")
             #EXTRAIGO LOS DATOS
-            if(debug==True): print(x)
+            if(debug==True): print(link)
             v_titleHouse = getTitle(wait)
             if(debug==True): print(v_titleHouse)
             v_priceHouse = getPrice(wait)
@@ -203,9 +202,9 @@ def extractLinksFotocasa(url_text, start_time,rutaGuardado, nombreArchivo ):
                 if(debug==True): print(v_floor)
             else:
                 v_floor = 'No es un piso ni un apartamento'
-            getPhotography(wait,linkActual,nombreArchivo, rutaGuardado)
+            getPhotography(wait,linkActual,dataFileName, saveDir)
             v_comment = getComment(wait)
-            df.loc[len(df)] = [x,v_titleHouse,v_priceHouse ,v_areaHouse,v_floor, v_reference,v_seller, numPthotos[linkActual-1],v_orientation, v_houseType, v_comment]
+            df.loc[len(df)] = [link,v_titleHouse,v_priceHouse ,v_areaHouse,v_floor, v_reference,v_seller, numPthotos[linkActual-1],v_orientation, v_houseType, v_comment]
         print("Amos a hacer click en siguiente")
         driver.get(url_text)
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
@@ -241,9 +240,9 @@ def extractLinksFotocasa(url_text, start_time,rutaGuardado, nombreArchivo ):
     df_copy = pd.concat(frames, axis=0, join='outer', ignore_index=True,
               keys=None, levels=None, names=None, verify_integrity=False,
               copy=True)
-    df_copy.to_csv(rutaGuardado + "\datos_"+nombreArchivo+'.csv', encoding='utf-8', index=False)
+    df_copy.to_csv(saveDir + "\datos_"+dataFileName+'.csv', encoding='utf-8', index=False)
     print(prefix,'Finalizado : Copia de datos al excel')
-    print("Los datos estan en ", home, "\Desktop\datos_", nombreArchivo, ".csv")
+    print("Los datos estan en ", saveDir)
     printElapsedTieme(start_time)
 
 def goDownPageLoadingAll(wait):
@@ -367,7 +366,7 @@ def getArea(wait):
             v_houseArea = 'ERROR'
     return v_houseArea
 
-def getPhotography(wait, numImage,nombreArchivo, rutaGuardado):
+def getPhotography(wait, numImage,dataFileName, saveDir):
     try:
         img =  wait.until(EC.presence_of_element_located((By.XPATH,"//div[@class='re-DetailSlider']//div/ul/li[1]/div[@class='re-DetailMultimediaImage-container re-DetailMultimediaImage-container--withHorizontalBorder']/img")))
         #print("Imagen obtenida")
@@ -381,9 +380,9 @@ def getPhotography(wait, numImage,nombreArchivo, rutaGuardado):
     try:
         src = img.get_attribute('src')
         print("Imagen src : ", src)
-        imageName = str(numImage) + "_" + nombreArchivo + r".jpg"
+        imageName = str(numImage) + "_" + dataFileName + r".jpg"
         print("Nombre del archivo : ",imageName)
-        imageCompleteName = rutaGuardado+ "\img_" + imageName
+        imageCompleteName = saveDir+ "\img_" + imageName
         print("Ruta del archivo :", imageCompleteName)
         print("Nombre del archivo : ",imageName)
         urllib.request.urlretrieve(src,imageCompleteName)

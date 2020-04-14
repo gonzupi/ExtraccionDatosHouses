@@ -53,13 +53,13 @@ proxy = Proxy({
     'noProxy':''})
 home = str(Path.home())
 debug = True #Esto hace que vayan mostrandose los mensajes por el terminal, cambiar a False si se quiere
-tiempoEspera = 3
-tiempoEsperaInicial = 100000
-sleepTime = 2 # mas rand de 2 segundos
+waitTimeDefault = 2
+waitTimeLong = 100000
+sleepTime = 4 # mas rand de 2 segundos
 ################################################################################################################
 
 #Esta es la función principal de IDEALISTA
-def extractLinksPisos(url_text, start_time,rutaGuardado, nombreArchivo ):
+def extractLinksPisos(url_text, start_time,saveDir, dataFileName ):
     #INICIO FIREFOX
     #########################################################################################
     prefix = "MF_" #Para saber desde qu� hebra ejecuto cada cosa uso siempre el prefijo del navegador antes de mostrar un mensaje
@@ -76,8 +76,8 @@ def extractLinksPisos(url_text, start_time,rutaGuardado, nombreArchivo ):
         driver = webdriver.Firefox(desired_capabilities=caps,  proxy=proxy, firefox_profile=profile, options=options)
     if WithProxy == 0 :
         driver = webdriver.Firefox(desired_capabilities=caps, firefox_profile=profile, options=options)#executable_path='/your/path/to/geckodriver'
-    wait = WebDriverWait(driver,tiempoEspera)
-    waitLong = WebDriverWait(driver,tiempoEsperaInicial)
+    wait = WebDriverWait(driver,waitTimeDefault)
+    waitLong = WebDriverWait(driver,waitTimeLong)
     driver.maximize_window()
     ###########################################################################################
     sleepRand()
@@ -143,7 +143,7 @@ def extractLinksPisos(url_text, start_time,rutaGuardado, nombreArchivo ):
             v_floor = 'No es un piso ni un apartamento'
         if(debug==True): print(v_floor)
         
-        getPhotography(wait,linkActual, nombreArchivo, rutaGuardado)
+        getPhotography(wait,linkActual, dataFileName, saveDir)
 
         df.loc[len(df)] = [linkHouse,v_titleHouse,v_priceHouse ,v_areaHouse,v_orientacion,v_floor, v_reference,v_seller, numPthotos, v_houseType, v_comment]
         '''
@@ -151,7 +151,6 @@ def extractLinksPisos(url_text, start_time,rutaGuardado, nombreArchivo ):
         linkHouse = ClickNextPageRight(wait,waitLong,driver)
         sleepRand()
         exit = exit-1
-    
     driver.close()
     print("Extraidos ", pages, " links")
     #TODOS LOS DATOS EXTRAIDOS
@@ -161,9 +160,9 @@ def extractLinksPisos(url_text, start_time,rutaGuardado, nombreArchivo ):
     df_copy = pd.concat(frames, axis=0, join='outer', ignore_index=True,
               keys=None, levels=None, names=None, verify_integrity=False,
               copy=True)
-    df_copy.to_csv(rutaGuardado + "\datos_"+nombreArchivo+'.csv', encoding='utf-8', index=False)
+    df_copy.to_csv(saveDir + "\datos_"+dataFileName+'.csv', encoding='utf-8', index=False)
     print(prefix,'Finalizado : Copia de datos al excel')
-    print("Los datos estan en ",rutaGuardado)
+    print("Los datos estan en ",saveDir)
     printElapsedTieme(start_time)
 
 def sleepRand():
@@ -271,7 +270,7 @@ def getArea(wait):
             v_houseArea = 'ERROR'
     return v_houseArea
 
-def getPhotography(wait, numImage, nombreArchivo, rutaGuardado):
+def getPhotography(wait, numImage, dataFileName, saveDir):
     try:
         img =  wait.until(EC.presence_of_element_located((By.XPATH,"//img[@id='mainPhotoPrint']")))
         #print("Imagen obtenida")
@@ -285,9 +284,9 @@ def getPhotography(wait, numImage, nombreArchivo, rutaGuardado):
     try:
         src = img.get_attribute('src')
         print("Imagen src : ", src)
-        imageName = str(numImage) + "_" + nombreArchivo + r".jpg"
+        imageName = str(numImage) + "_" + dataFileName + r".jpg"
         print("Nombre del archivo : ",imageName)
-        imageCompleteName = rutaGuardado+ "\img_" + imageName
+        imageCompleteName = saveDir+ "\img_" + imageName
         print("Ruta del archivo :", imageCompleteName)
         print("Nombre del archivo : ",imageName)
         urllib.request.urlretrieve(src,imageCompleteName)
