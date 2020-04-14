@@ -133,7 +133,7 @@ def extractLinksIdealista(URLText, startTime, saveDir, dataFileName):
             v_seller = getSeller(wait)
             if(debug==True): print(v_seller)
             v_comment = getComment(wait)
-            photoName = getPhotography(wait,linkActual )
+            photoName = getPhotography(wait,linkActual,dataFileName, saveDir)
             photoText = photoName.split(' ')
             if(photoText[1] == "de"): photoText[1]=photoText[2]
             print("Palabra clave de la imagen : ", photoText[1])
@@ -166,7 +166,7 @@ def extractLinksIdealista(URLText, startTime, saveDir, dataFileName):
               copy=True)
     df_copy.to_csv(saveDir + "\datos_"+dataFileName+'.csv', encoding='utf-8', index=False)
     print(prefix,'Finalizado : Copia de datos al excel')
-    print("Los datos están en ", home, "\Desktop\datos_", dataFileName, ".csv")
+    print("Los datos están en ", saveDir)
     printElapsedTieme(startTime)
 
 def printElapsedTieme(started_time):
@@ -232,7 +232,7 @@ def getNumRooms(wait):
             v_numberRooms = 'ERROR'
     return v_numberRooms
 
-def getPhotography(wait, numImage):
+def getPhotography(wait, numImage,dataFileName, saveDir):
     try:
         img =  wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,"div.main-image_first img")))
         #print("Imagen obtenida")

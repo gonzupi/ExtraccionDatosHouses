@@ -48,11 +48,11 @@ def createDir(Path):
           print("No he podido crear el directorio, sigo usando ", saveDir)
 
 def whatPrefix(URL):
-    if   URLText.find("www.idealista") == -1:
+    if   URLText.find("www.idealista") != -1:
         prefix = 'ideal'
-    elif URLText.find("www.fotocasa") == -1:
+    elif URLText.find("www.fotocasa") != -1:
         prefix = 'foto'
-    elif URLText.find("www.pisos") == -1:
+    elif URLText.find("www.pisos") != -1:
         prefix = 'pisos'
     return prefix
 ################################################################################################################
