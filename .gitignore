@@ -1,0 +1,6 @@
+./ahorrandoTrabajo/__pycache__
+./ahorrandoTrabajo/__pycache__/*
+./.settings
+.project
+.pydevproject
+./ahorrandoTrabajo/geckodriver.log
