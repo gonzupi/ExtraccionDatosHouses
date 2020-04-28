@@ -14,8 +14,8 @@ import sys
 import os
 
 import Dumbledore
-import jackSparrow
-import Erebor
+import JackSparrow
+import Gimbli
 
 #Variables globales
 ################################################################################################################
@@ -78,13 +78,19 @@ elif len(sys.argv) < 2: #python.py, input by keyboard
 #Start the browser
 if(URLText.find("www.fotocasa") != -1):
     print("Iniciando extracción de datos para fotocasa.com")
+    print("--------------------------------------------------------------------")
+    print("INICIANDO PROYECTO   :    Dumbledore")
     FirefoxThread = threading.Thread(target=Dumbledore.extractLinksFotocasa(URLText, startTime, savePath, dataFileName))
 elif(URLText.find("www.idealista") != -1):
     print("Iniciando extracción de datos para idealista.com")
-    FirefoxThread = threading.Thread(target=jackSparrow.extractLinksIdealista(URLText, startTime, savePath, dataFileName))
+    print("--------------------------------------------------------------------")
+    print("INICIANDO PROYECTO   :    JackSparrow")
+    FirefoxThread = threading.Thread(target=JackSparrow.extractLinksIdealista(URLText, startTime, savePath, dataFileName))
 elif(URLText.find("www.pisos") != -1):
     print("Iniciando extracción de datos para pisos.com")
-    FirefoxThread = threading.Thread(target=Erebor.extractLinksPisos(URLText, startTime, savePath, dataFileName))
+    print("--------------------------------------------------------------------")
+    print("INICIANDO PROYECTO   :    Gimbli")
+    FirefoxThread = threading.Thread(target=Gimbli.extractLinksPisos(URLText, startTime, savePath, dataFileName))
 FirefoxThread.start()
 FirefoxThread.join()
 print('Fin del programa principal.')

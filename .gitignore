@@ -4,3 +4,4 @@
 .project
 .pydevproject
 ./ahorrandoTrabajo/geckodriver.log
+./ahorrandoTrabajo/Extraccion_*

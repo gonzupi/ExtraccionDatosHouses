@@ -6,7 +6,7 @@ Programa pensado para extraer datos de plataformas de alquiler usando diferentes
 De momento el programa extrae los datos desde dos webs:fotocasa y idealista.
 He restringido el uso de selenium a Firefox puesto que es el que menos fallos me da a la hora de migrar el proyecto.
 '''
-# FOTOCASA.COM
+# PISOS.COM
 
 from selenium import webdriver
 import pandas as pd
