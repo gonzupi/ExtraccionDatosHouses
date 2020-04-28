@@ -7,3 +7,6 @@
 ./ahorrandoTrabajo/Extraccion_*
 *.jpg
 *.pyc
+*.csv
+./ahorrandoTrabajo/.project
+./ahorrandoTrabajo/.pydevproject

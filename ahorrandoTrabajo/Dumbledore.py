@@ -218,19 +218,23 @@ def extractLinksFotocasa(URLText, startTime,saveDir, dataFileName ):
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-        ClickNextPage(wait,waitLong,driver)
-        sleepRand()
-        try:
-            wait.until(EC.presence_of_element_located((By.XPATH,"//h1[text()='Pardon Our Interruption...']")))
-            print("Ey! un capcha!")
-            winsound.Beep(frequency, duration)
-            waitLong.until(EC.presence_of_element_located((By.CSS_SELECTOR,".sui-AtomButton--primary")))
-            print("Capcha pasado, amos q nos vamos")
-        except:
-            print("No veo capcha...")
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-        URLText = driver.current_url
+        if(ClickNextPage(wait,waitLong,driver) == False):
+            print("He llegado al final antes de lo que pensaba, no encuentro el botón de siguiente")
+            print("Terminé")
+            exit = -1;
+        else:
+            sleepRand()
+            try:
+                wait.until(EC.presence_of_element_located((By.XPATH,"//h1[text()='Pardon Our Interruption...']")))
+                print("Ey! un capcha!")
+                winsound.Beep(frequency, duration)
+                waitLong.until(EC.presence_of_element_located((By.CSS_SELECTOR,".sui-AtomButton--primary")))
+                print("Capcha pasado, amos q nos vamos")
+            except:
+                print("No veo capcha...")
+            wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
+            wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
+            URLText = driver.current_url
     driver.close()
     print("Extraidos ", pages, " links")
     #TODOS LOS DATOS EXTRAIDOS
@@ -281,8 +285,10 @@ def ClickNextPage(wait, waitLong, driver):
         nextButton = wait.until(EC.presence_of_element_located((By.XPATH,"//ul[@class='sui-PaginationBasic-list']/li[last()]/a")))
         driver.get(nextButton.get_attribute('href'))
         print("Click en siguiente exitoso")
+        return True;
     except:
         print("ERROR haciendo click en siguiente")
+        return False;
 
 def printElapsedTieme(started_time):
     temp = time.time() - started_time
