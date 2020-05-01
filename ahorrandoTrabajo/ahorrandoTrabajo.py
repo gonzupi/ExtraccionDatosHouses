@@ -12,7 +12,6 @@ import socket
 from pathlib import Path
 import sys
 import os
-
 import Dumbledore
 import JackSparrow
 import Gimbli
@@ -45,7 +44,7 @@ def createDir(Path):
         try:  
           os.mkdir(Path)
         except:
-          print("No he podido crear el directorio, sigo usando ", saveDir)
+          print("No he podido crear el directorio, sigo usando ", savePath)
 
 def whatPrefix(URL):
     if   URLText.find("www.idealista") != -1:

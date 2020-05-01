@@ -97,22 +97,41 @@ def extractLinksFotocasa(URLText, startTime,saveDir, dataFileName ):
         sleepRand()
     except:
         print("No he podido hacer click en la cookies...")
+    if(URLText != driver.current_url):
+        print("Ya está fotocasa dando la brasa... recargo la web que has metido anda...")
+        driver.get(URLText)
+        waitLong.until(EC.url_contains(URLText))
+        sleepRand()
+        sleepRand()
+        try:
+            wait.until(EC.presence_of_element_located((By.XPATH, "//h1[text()='Pardon Our Interruption...']")))
+            print("Ey! un capcha!")
+            winsound.Beep(frequency, duration)
+            waitLong.until(EC.presence_of_element_located((By.CSS_SELECTOR, ".sui-AtomButton--primary")))
+            print("Capcha pasado, amos q nos vamos")
+        except:
+            print("No veo capcha...")
+        try:
+            wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ".sui-AtomButton--primary"))).click()
+            sleepRand()
+        except:
+            print("No he podido hacer click en la cookies...")
     sleepRand()
     StringNumObjects = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,".re-SearchTitle-count"))).text
     NumObjects = int(StringNumObjects)
     print("Hay ", NumObjects, " resultados")
-    pages = NumObjects/31;
+    pages = NumObjects/31
     print("Hay ",pages, " paginas aproximadamente...")
     page = 0
     linkActual = 0
     df = pd.DataFrame(columns = ['Link', 'Título','Precio', 'metros cuadrados','Planta','Referencia del portal', 'Inmobiliaria', 'número de fotos','Orientación','Tipo de anuncio', 'Descripción del anuncio'])
     numPthotos = []
     numPthotos.clear()
-    exit = NumObjects;
+    exit = NumObjects
     while exit > 0:
         page = page+1
         print("Extrayendo : pagina ", page, " de ", pages)
-        print("Quedan ", exit, " links aún");
+        print("Quedan ", exit, " links aún")
         goDownPageLoadingAll(wait)
         try:
                 wait.until(EC.presence_of_element_located((By.XPATH,"//div[@class='re-Searchresult-itemRow']//div[@class='re-Card-secondary']/a[@class='re-Card-link']")))
@@ -157,13 +176,12 @@ def extractLinksFotocasa(URLText, startTime,saveDir, dataFileName ):
                         numPthotos.append(photosDef)
                         print("Extraido el número de fotos :", photosDef)
                     except:
-                        printt(prefix , 'EEROR : numFotos ERROR')
+                        print(prefix , 'EROR : numFotos ERROR')
             except:
                 print("Raro rarísimo con las fotitos de los huevos")
         for link in allLinks:
             print("Extrayendo página ", linkActual, " de un total de ", NumObjects)
             printElapsedTieme(startTime)
-            linkActual = linkActual+1
             sleepRand()
             driver.get(link)
             try:
@@ -189,9 +207,9 @@ def extractLinksFotocasa(URLText, startTime,saveDir, dataFileName ):
             v_orientation = getOrientation(wait)
             if(debug==True): print("Orientación : ",v_orientation)
             try:
-                if(debug==True): print('Número de fotos :', numPthotos[linkActual-1])
+                print('Número de fotos :', numPthotos[linkActual])
             except:
-                numPthotos.append('ERROR')
+                numPthotos.append('ERROR con el número de fotos')
             v_houseType = getHouseType(wait, driver)
             if(debug==True): print("Tipo de oferta : ",v_houseType)
             if(v_houseType == 'Piso'):
@@ -204,7 +222,8 @@ def extractLinksFotocasa(URLText, startTime,saveDir, dataFileName ):
                 v_floor = 'No es un piso ni un apartamento'
             getPhotography(wait,linkActual,dataFileName, saveDir)
             v_comment = getComment(wait)
-            df.loc[len(df)] = [link,v_titleHouse,v_priceHouse ,v_areaHouse,v_floor, v_reference,v_seller, numPthotos[linkActual-1],v_orientation, v_houseType, v_comment]
+            df.loc[len(df)] = [link,v_titleHouse,v_priceHouse ,v_areaHouse,v_floor, v_reference,v_seller, numPthotos[linkActual],v_orientation, v_houseType, v_comment]
+            linkActual = linkActual+1
         print("Amos a hacer click en siguiente")
         driver.get(URLText)
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
@@ -221,7 +240,7 @@ def extractLinksFotocasa(URLText, startTime,saveDir, dataFileName ):
         if(ClickNextPage(wait,waitLong,driver) == False):
             print("He llegado al final antes de lo que pensaba, no encuentro el botón de siguiente")
             print("Terminé")
-            exit = -1;
+            exit = -1
         else:
             sleepRand()
             try:
@@ -285,10 +304,10 @@ def ClickNextPage(wait, waitLong, driver):
         nextButton = wait.until(EC.presence_of_element_located((By.XPATH,"//ul[@class='sui-PaginationBasic-list']/li[last()]/a")))
         driver.get(nextButton.get_attribute('href'))
         print("Click en siguiente exitoso")
-        return True;
+        return True
     except:
         print("ERROR haciendo click en siguiente")
-        return False;
+        return False
 
 def printElapsedTieme(started_time):
     temp = time.time() - started_time
