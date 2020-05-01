@@ -52,7 +52,7 @@ proxy = Proxy({
     'sslProxy': myProxy,
     'noProxy':''})
 debug = False #Esto hace que vayan mostrandose los mensajes por el terminal, cambiar a False/True si se quiere
-waitTimeDefault = 5
+waitTimeDefault = 3
 waitTimeLong = 100000
 sleepTime = 2 # mas rand de 2 segundos
 ################################################################################################################
@@ -83,7 +83,6 @@ def extractLinksFotocasa(URLText, startTime,saveDir, dataFileName ):
     driver.get(URLText)
     waitLong.until(EC.url_contains(URLText))
     sleepRand()
-    sleepRand()
     try:
         wait.until(EC.presence_of_element_located((By.XPATH,"//h1[text()='Pardon Our Interruption...']")))
         print("Ey! un capcha!")
@@ -102,7 +101,6 @@ def extractLinksFotocasa(URLText, startTime,saveDir, dataFileName ):
         driver.get(URLText)
         waitLong.until(EC.url_contains(URLText))
         sleepRand()
-        sleepRand()
         try:
             wait.until(EC.presence_of_element_located((By.XPATH, "//h1[text()='Pardon Our Interruption...']")))
             print("Ey! un capcha!")
@@ -116,7 +114,6 @@ def extractLinksFotocasa(URLText, startTime,saveDir, dataFileName ):
             sleepRand()
         except:
             print("No he podido hacer click en la cookies...")
-    sleepRand()
     StringNumObjects = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,".re-SearchTitle-count"))).text
     NumObjects = int(StringNumObjects)
     print("Hay ", NumObjects, " resultados")
@@ -167,7 +164,6 @@ def extractLinksFotocasa(URLText, startTime,saveDir, dataFileName ):
                 print(prefix , 'EEROR : numFotos ERROR')
         if(len(numPthotos)==0):
             if(debug==True):print("Algo raro pasa")
-            sleepRand()
             try:
                 numPhotograph=driver.find_elements_by_xpath("//div[@class='re-Searchresult-itemRow']/div/div[@class='re-Card-primary']/a/div[@class='re-Card-multimediaCounter']/div[@class='re-Card-photosCounter']/span[last()]")
                 for i in numPhotograph:
@@ -180,6 +176,7 @@ def extractLinksFotocasa(URLText, startTime,saveDir, dataFileName ):
             except:
                 print("Raro rarísimo con las fotitos de los huevos")
         for link in allLinks:
+            print("\n----------------------------------------------------------------\n")
             print("Extrayendo página ", linkActual, " de un total de ", NumObjects)
             printElapsedTieme(startTime)
             sleepRand()
@@ -274,7 +271,6 @@ def goDownPageLoadingAll(wait):
     sleepRand()
     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-    sleepRand()
     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
     sleepRand()
@@ -283,7 +279,6 @@ def goDownPageLoadingAll(wait):
     sleepRand()
     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
-    sleepRand()
     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR," body"))).send_keys(Keys.PAGE_DOWN)
     sleepRand()
